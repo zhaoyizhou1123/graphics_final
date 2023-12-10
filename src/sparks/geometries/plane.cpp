@@ -1,41 +1,51 @@
 #include "plane.h"
 #include <random>
+#include <string>
+#include "grassland/util/logging.h"
 
-sparks::Plane::Plane(
-    float coord0_min, float coord0_max, 
-    float coord1_min, float coord1_max, 
-    float coord2, const char* xyz_order):
-    coord0_min_(coord0_min),
-    coord0_max_(coord0_max),
-    coord1_min_(coord1_min),
-    coord1_max_(coord1_max),
-    coord2_(coord2),
-    xyz_2_coord_index_(std::vector<int>(3))
+sparks::Plane::Plane(const tinyxml2::XMLElement* element)
 {
-    for (int i = 0; i < 3; i++) {
-        char dim = xyz_order[i];
-        if (dim == 'x') {
-            xyz_2_coord_index_[0] = i;
-        }
-        else if (dim == 'y') {
-            xyz_2_coord_index_[1] = i;
-        }
-        else if (dim == 'z') {
-            xyz_2_coord_index_[2] = i;
-        }
-        else {
-            throw "invalid xyz_order!";
-        }
+    auto x = element->FirstChildElement("x");
+    x_min_ = std::stof(x->FindAttribute("min")->Value());
+    x_max_ = std::stof(x->FindAttribute("max")->Value());
+    auto y = element->FirstChildElement("y");
+    y_min_ = std::stof(y->FindAttribute("min")->Value());
+    y_max_ = std::stof(y->FindAttribute("max")->Value());
+    auto z = element->FirstChildElement("z");
+    z_min_ = std::stof(z->FindAttribute("min")->Value());
+    z_max_ = std::stof(z->FindAttribute("max")->Value());
+
+    int degenerate_cnt = 0;
+    float x_range = x_max_ - x_min_;
+    if (x_range < 0) {
+        throw "Plane x coordinate max < min!";
     }
-    float range0 = coord0_max_ - coord0_min_;
-    if (range0 < 0) {
-        throw "Coordinate 0 min larger than max!";
+    else if (x_range == 0) {
+        x_range = 1.0f;
+        degenerate_cnt++;
     }
-    float range1 = coord1_max_ - coord1_min_;
-    if (range1 < 0) {
-        throw "Coordinate 1 min larger than max!";
+    float y_range = y_max_ - y_min_;
+    if (y_range < 0) {
+        throw "Plane y coordinate max < min!";
     }
-    area_ = range0 * range1;
+    else if (y_range == 0) {
+        y_range = 1.0f;
+        degenerate_cnt++;
+    }
+    float z_range = z_max_ - z_min_;
+    if (z_range < 0) {
+        throw "Plane z coordinate max < min!";
+    }
+    else if (z_range == 0) {
+        z_range = 1.0f;
+        degenerate_cnt++;
+    }
+    if (degenerate_cnt != 1) {
+        throw "The plane's degenerate dim is not 0!";
+    }
+    
+    LAND_INFO("Range: x {}, y {}, z{}", x_range, y_range, z_range);
+    area_ = x_range * y_range * z_range;
 }
 
 float sparks::Plane::GetArea() const
@@ -43,18 +53,29 @@ float sparks::Plane::GetArea() const
     return area_;
 }
 
-glm::vec3 sparks::Plane::Sample(int seed0, int seed1) const
+glm::vec3 sparks::Plane::Sample(int seed_x, int seed_y, int seed_z) const
 {
-    std::mt19937 rng0(seed0);
-    std::mt19937 rng1(seed1);
-    float coord0 = std::uniform_real_distribution<float>(coord0_min_, coord0_max_)(rng0);
-    float coord1 = std::uniform_real_distribution<float>(coord1_min_, coord1_max_)(rng1);
-
-    std::vector<float> pos_index{ coord0,coord1,coord2_ };
-
-    std::vector<float> pos_dim(3); // (x,y,z) value
-    for (int dim = 0; dim < 3; dim++) { // dim corresponds to x,y,z
-        pos_dim[dim] = pos_index[xyz_2_coord_index_[dim]];
+    std::mt19937 rng_x(seed_x);
+    std::mt19937 rng_y(seed_y);
+    std::mt19937 rng_z(seed_z);
+    float pos_x, pos_y, pos_z;
+    if (x_min_ == x_max_) {
+        pos_x = x_min_;
     }
-    return glm::vec3{pos_dim[0], pos_dim[1], pos_dim[2]};
+    else {
+        pos_x = std::uniform_real_distribution<float>(x_min_, x_max_)(rng_x);
+    }
+    if (y_min_ == y_max_) {
+        pos_y = y_min_;
+    }
+    else {
+        pos_y = std::uniform_real_distribution<float>(y_min_, y_max_)(rng_y);
+    }
+    if (z_min_ == z_max_) {
+        pos_z = z_min_;
+    }
+    else {
+        pos_z = std::uniform_real_distribution<float>(z_min_, z_max_)(rng_z);
+    }
+    return glm::vec3{pos_x, pos_y, pos_z};
 }

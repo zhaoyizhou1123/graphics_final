@@ -5,6 +5,8 @@
 #include "imgui.h"
 #include "sparks/assets/accelerated_mesh.h"
 #include "sparks/util/util.h"
+#include "sparks/geometries/plane.h"
+#include <memory>
 
 namespace sparks {
 
@@ -116,7 +118,7 @@ const glm::vec3 &Scene::GetCameraPitchYawRoll() const {
 void Scene::UpdateEnvmapConfiguration() {
   const auto &scene = *this;
   auto envmap_id = scene.GetEnvmapId();
-  auto &envmap_texture = scene.GetTextures()[envmap_id];
+  auto &envmap_texture = scene.GetTextures()[envmap_id]; // Get current texture
   auto buffer = envmap_texture.GetBuffer();
 
   envmap_minor_color_ = glm::vec3{0.0f};
@@ -127,7 +129,7 @@ void Scene::UpdateEnvmapConfiguration() {
   auto inv_width = 1.0f / float(envmap_texture.GetWidth());
   auto inv_height = 1.0f / float(envmap_texture.GetHeight());
   for (int i = 0; i <= envmap_texture.GetHeight(); i++) {
-    float x = float(i) * glm::pi<float>() * inv_height;
+    float x = float(i) * glm::pi<float>() * inv_height; // \pi*i/h
     sample_scale_[i] = (-std::cos(x) + 1.0f) * 0.5f;
   }
 
@@ -137,7 +139,7 @@ void Scene::UpdateEnvmapConfiguration() {
   for (int y = 0; y < envmap_texture.GetHeight(); y++) {
     auto scale = sample_scale_[y + 1] - sample_scale_[y];
 
-    auto theta = (float(y) + 0.5f) * inv_height * glm::pi<float>();
+    auto theta = (float(y) + 0.5f) * inv_height * glm::pi<float>(); // sphere coordinate theta
     auto sin_theta = std::sin(theta);
     auto cos_theta = std::cos(theta);
 
@@ -157,7 +159,7 @@ void Scene::UpdateEnvmapConfiguration() {
       auto strength = std::max(color.x, std::max(color.y, color.z));
       if (strength > major_strength) {
         envmap_light_direction_ = {sin_theta * sin_phi, cos_theta,
-                                   -sin_theta * cos_phi};
+                                   -sin_theta * cos_phi}; // Coordinate of sphere?
         major_strength = strength;
       }
 
@@ -171,9 +173,13 @@ void Scene::UpdateEnvmapConfiguration() {
     v *= inv_total_weight;
   }
 }
+
+// Return a fixed light direction in the scene
 glm::vec3 Scene::GetEnvmapLightDirection() const {
   float sin_offset = std::sin(envmap_offset_);
   float cos_offset = std::cos(envmap_offset_);
+
+  // Can simply think as returning envmap_light_direction_, only updated during UpdateEnvmapConfiguration.
   return {cos_offset * envmap_light_direction_.x +
               sin_offset * envmap_light_direction_.z,
           envmap_light_direction_.y,
@@ -239,6 +245,10 @@ float Scene::TraceRay(const glm::vec3 &origin,
   return result;
 }
 
+glm::vec3 Scene::Shade(const glm::vec3 &p, const glm::vec3 &dir_out) const {
+  return glm::vec3();
+}
+
 glm::vec4 Scene::SampleEnvmap(const glm::vec3 &direction) const {
   float x = envmap_offset_;
   float y = acos(direction.y) * INV_PI;
@@ -302,83 +312,110 @@ int Scene::LoadObjMesh(const std::string &file_path) {
   }
 }
 
-Scene::Scene(const std::string &filename) : Scene() {
-  auto doc = std::make_unique<tinyxml2::XMLDocument>();
-  doc->LoadFile(filename.c_str());
-  tinyxml2::XMLElement *rootElement = doc->RootElement();
+Scene::Scene(const std::string& filename) : Scene() {
+    auto doc = std::make_unique<tinyxml2::XMLDocument>();
+    doc->LoadFile(filename.c_str());
+    tinyxml2::XMLElement* rootElement = doc->RootElement();
 
-  glm::mat4 camera_to_world = glm::inverse(
-      glm::lookAt(glm::vec3{2.0f, 1.0f, 3.0f}, glm::vec3{0.0f, 0.0f, 0.0f},
-                  glm::vec3{0.0f, 1.0f, 0.0f}));
+    glm::mat4 camera_to_world = glm::inverse(
+        glm::lookAt(glm::vec3{ 2.0f, 1.0f, 3.0f }, glm::vec3{ 0.0f, 0.0f, 0.0f },
+            glm::vec3{ 0.0f, 1.0f, 0.0f }));
 
-  for (tinyxml2::XMLElement *child_element = rootElement->FirstChildElement();
-       child_element; child_element = child_element->NextSiblingElement()) {
-    std::string element_type{child_element->Value()};
-    if (element_type == "envmap") {
-      std::string envmap_type = child_element->FindAttribute("type")->Value();
-      if (envmap_type == "file") {
-        std::string envmap_filename =
-            child_element->FindAttribute("value")->Value();
-        Texture envmap;
-        Texture::Load(envmap_filename, envmap);
-        envmap_id_ = AddTexture(envmap, PathToFilename(envmap_filename));
-      } else if (envmap_type == "color") {
-        glm::vec3 color =
-            StringToVec3(child_element->FindAttribute("value")->Value());
-        Texture envmap(1, 1, glm::vec4{color, 1.0f});
-        envmap_id_ = AddTexture(envmap, "Environment Map");
-      }
-    } else if (element_type == "camera") {
-      camera_to_world =
-          XmlTransformMatrix(child_element->FirstChildElement("transform"));
-      float fov = 60.0f;
-      float aperture = 0.0f;
-      float focal_length = 3.0f;
-      auto grandchild_element = child_element->FirstChildElement("fov");
-      if (grandchild_element) {
-        fov = std::stof(grandchild_element->FindAttribute("value")->Value());
-      }
-      grandchild_element = child_element->FirstChildElement("speed");
-      if (grandchild_element) {
-        camera_speed_ =
-            std::stof(grandchild_element->FindAttribute("value")->Value());
-      }
-      grandchild_element = child_element->FirstChildElement("aperture");
-      if (grandchild_element) {
-        aperture =
-            std::stof(grandchild_element->FindAttribute("value")->Value());
-      }
-      grandchild_element = child_element->FirstChildElement("focal_length");
-      if (grandchild_element) {
-        focal_length =
-            std::stof(grandchild_element->FindAttribute("value")->Value());
-      }
-      camera_ = Camera(fov, aperture, focal_length);
-    } else if (element_type == "model") {
-      Mesh mesh = Mesh(child_element);
-      Material material{};
+    for (tinyxml2::XMLElement* child_element = rootElement->FirstChildElement();
+        child_element; child_element = child_element->NextSiblingElement()) {
+        // child_element: each object
+        std::string element_type{ child_element->Value() }; // type of object
+        if (element_type == "envmap") {
+            std::string envmap_type = child_element->FindAttribute("type")->Value();
+            if (envmap_type == "file") {
+                std::string envmap_filename =
+                    child_element->FindAttribute("value")->Value();
+                Texture envmap;
+                Texture::Load(envmap_filename, envmap);
+                envmap_id_ = AddTexture(envmap, PathToFilename(envmap_filename)); // Update envmap_id_ to the last texture index
+            }
+            else if (envmap_type == "color") {
+                glm::vec3 color =
+                    StringToVec3(child_element->FindAttribute("value")->Value());
+                Texture envmap(1, 1, glm::vec4{ color, 1.0f });
+                envmap_id_ = AddTexture(envmap, "Environment Map");
+            }
+        }
+        else if (element_type == "camera") {
+            camera_to_world =
+                XmlTransformMatrix(child_element->FirstChildElement("transform"));
+            float fov = 60.0f;
+            float aperture = 0.0f;
+            float focal_length = 3.0f;
+            auto grandchild_element = child_element->FirstChildElement("fov");
+            if (grandchild_element) {
+                fov = std::stof(grandchild_element->FindAttribute("value")->Value());
+            }
+            grandchild_element = child_element->FirstChildElement("speed");
+            if (grandchild_element) {
+                camera_speed_ =
+                    std::stof(grandchild_element->FindAttribute("value")->Value());
+            }
+            grandchild_element = child_element->FirstChildElement("aperture");
+            if (grandchild_element) {
+                aperture =
+                    std::stof(grandchild_element->FindAttribute("value")->Value());
+            }
+            grandchild_element = child_element->FirstChildElement("focal_length");
+            if (grandchild_element) {
+                focal_length =
+                    std::stof(grandchild_element->FindAttribute("value")->Value());
+            }
+            camera_ = Camera(fov, aperture, focal_length);
+        }
+        else if (element_type == "model") {
+            Mesh mesh = Mesh(child_element);
+            Material material{};
 
-      auto grandchild_element = child_element->FirstChildElement("material");
-      if (grandchild_element) {
-        material = Material(this, grandchild_element);
-      }
+            auto grandchild_element = child_element->FirstChildElement("material");
+            if (grandchild_element) {
+                material = Material(this, grandchild_element);
+                std::string material_type{ grandchild_element->FindAttribute("type")->Value()};
+                if (material_type == "emission") { // Also add to lights
+                    auto geometry_element = child_element->FirstChildElement("geometry");
+                    if (geometry_element) {
+                        std::string geometry_type{ geometry_element->FindAttribute("type")->Value()};
+                        if (geometry_type == "plane") {
+                            auto geometry = Plane(geometry_element);
+                            LAND_INFO("Add plane light with area {}", geometry.GetArea());
+                            lights_.AddLight(
+                                &geometry,
+                                material.emission,
+                                material.emission_strength);
+                        }
+                        else {
+                            throw "Unknown geometry type!";
+                        }
+                    }
+                    else {
+                        throw "Emission object has no element geometry!";
+                    }
+            }
 
-      glm::mat4 transformation = XmlComposeTransformMatrix(child_element);
 
-      auto name_attribute = child_element->FindAttribute("name");
-      if (name_attribute) {
-        AddEntity(AcceleratedMesh(mesh), material, transformation,
-                  std::string(name_attribute->Value()));
-      } else {
-        AddEntity(AcceleratedMesh(mesh), material, transformation);
-      }
-    } else {
-      LAND_ERROR("Unknown Element Type: {}", child_element->Value());
+                glm::mat4 transformation = XmlComposeTransformMatrix(child_element);
+
+                auto name_attribute = child_element->FindAttribute("name");
+                if (name_attribute) {
+                    AddEntity(AcceleratedMesh(mesh), material, transformation,
+                        std::string(name_attribute->Value()));
+                }
+                else {
+                    AddEntity(AcceleratedMesh(mesh), material, transformation);
+                }
+            }
+            else {
+                LAND_ERROR("Unknown Element Type: {}", child_element->Value());
+            }
+        }
+        SetCameraToWorld(camera_to_world);
+        UpdateEnvmapConfiguration();
     }
-  }
-
-  SetCameraToWorld(camera_to_world);
-  UpdateEnvmapConfiguration();
+    LAND_INFO("Lights area {}", lights_.GetTotalArea());
 }
-
 }  // namespace sparks

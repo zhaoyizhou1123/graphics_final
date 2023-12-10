@@ -6,6 +6,7 @@
 #include "sparks/assets/mesh.h"
 #include "sparks/assets/texture.h"
 #include "sparks/assets/util.h"
+#include "sparks/assets/light.h"
 #include "vector"
 
 namespace sparks {
@@ -51,6 +52,8 @@ class Scene {
   [[nodiscard]] const glm::vec3 &GetCameraPitchYawRoll() const;
 
   void Clear();
+
+  // Update envmap_light_direction_, envmap_minor_color_, envmap_major_color_
   void UpdateEnvmapConfiguration();
 
   [[nodiscard]] glm::vec3 GetEnvmapLightDirection() const;
@@ -60,11 +63,18 @@ class Scene {
   ;
   [[nodiscard]] glm::vec4 SampleEnvmap(const glm::vec3 &direction) const;
 
+  // @return t: The distance of intersection?
   float TraceRay(const glm::vec3 &origin,
                  const glm::vec3 &direction,
                  float t_min,
                  float t_max,
                  HitRecord *hit_record) const;
+
+  /* @brief Get the color of scene point p given out ray direction, using path tracing
+  * @param p, the point on scene
+  * @param dir_out, the out direction
+  */
+  [[nodiscard]] glm::vec3 Shade(const glm::vec3 &p, const glm::vec3 &dir_out) const;
 
   bool TextureCombo(const char *label, int *current_item) const;
   bool EntityCombo(const char *label, int *current_item) const;
@@ -75,10 +85,11 @@ class Scene {
   std::vector<Texture> textures_;
   std::vector<std::string> texture_names_;
 
-  std::vector<Entity> entities_;
+  std::vector<Entity> entities_; // The objects in the scene ?
+  Lights lights_; // Light sources
 
-  int envmap_id_{1};
-  float envmap_offset_{0.0f};
+  int envmap_id_{1}; // texture id
+  float envmap_offset_{0.0f}; // Fixed, no method to change it?
   std::vector<float> envmap_cdf_;
   glm::vec3 envmap_light_direction_{0.0f, 1.0f, 0.0f};
   glm::vec3 envmap_major_color_{0.5f};

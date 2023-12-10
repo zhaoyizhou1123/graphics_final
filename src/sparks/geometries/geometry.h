@@ -6,9 +6,9 @@ namespace sparks {
 class Geometry {
  public:
   // Return the area of the light source
-  [[nodiscard]] virtual float GetArea() const;
+  [[nodiscard]] virtual float GetArea() const = 0; // pure virtual
 
   // Sample a point on the light source
-  [[nodiscard]] virtual glm::vec3 Sample(int seed0, int seed1) const;
+  [[nodiscard]] virtual glm::vec3 Sample(int seed_x, int seed_y, int seed_z) const = 0; // pure virtual
 };
 } // namespace sparks
