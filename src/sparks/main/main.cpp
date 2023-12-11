@@ -5,6 +5,13 @@
 #include "iostream"
 #include "sparks/sparks.h"
 #include "tiny_obj_loader.h"
+#include <exception>
+
+// Testing include
+#include "sparks/util/sample.h"
+#include <random>
+#include "glm/gtx/string_cast.hpp"
+#include "glm/ext.hpp"
 
 ABSL_FLAG(bool,
           validation_layer,
@@ -17,12 +24,20 @@ ABSL_FLAG(int, device, -1, "Select physical device manually");
 
 void RunApp(sparks::Renderer *renderer);
 
+void test_main(); 
+
 int main(int argc, char *argv[]) {
-  absl::SetProgramUsageMessage("Usage");
-  absl::ParseCommandLine(argc, argv);
-  sparks::RendererSettings renderer_settings;
-  sparks::Renderer renderer(renderer_settings);
-  RunApp(&renderer);
+    try {
+        absl::SetProgramUsageMessage("Usage");
+        absl::ParseCommandLine(argc, argv);
+        sparks::RendererSettings renderer_settings; // Default renderer setting
+        sparks::Renderer renderer(renderer_settings);
+        RunApp(&renderer);
+      //test_main();
+    }
+    catch (const char* msg) {
+        std::cerr << msg << std::endl;
+    }
 }
 
 void RunApp(sparks::Renderer *renderer) {
@@ -37,4 +52,13 @@ void RunApp(sparks::Renderer *renderer) {
   app_settings.selected_device = absl::GetFlag(FLAGS_device);
   sparks::App app(renderer, app_settings);
   app.Run();
+}
+
+void test_main() {
+  std::mt19937 rng(0);
+  for (int i = 0; i < 5; i++) {
+    glm::vec3 sample = sparks::hemisphere_sample(glm::normalize(glm::vec3{ 1,1,0 }), rng);
+    //glm::vec3 sample = sparks::hemisphere_sample_std(rng);
+    std::cout << "Sample ray " << glm::to_string(sample) << ", norm " << glm::length(sample) << std::endl;
+  }
 }
