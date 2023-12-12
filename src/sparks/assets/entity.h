@@ -5,6 +5,9 @@
 #include "sparks/assets/model.h"
 
 namespace sparks {
+/* @brief The objects in the scene.
+* Stores model, material, etc.
+*/
 class Entity {
  public:
   template <class ModelType>

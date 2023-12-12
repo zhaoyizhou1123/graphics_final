@@ -12,6 +12,8 @@
 #include <random>
 #include "glm/gtx/string_cast.hpp"
 #include "glm/ext.hpp"
+#include "sparks/assets/light.h"
+#include "sparks/geometries/plane.h"
 
 ABSL_FLAG(bool,
           validation_layer,
@@ -55,10 +57,9 @@ void RunApp(sparks::Renderer *renderer) {
 }
 
 void test_main() {
-  std::mt19937 rng(0);
-  for (int i = 0; i < 5; i++) {
-    glm::vec3 sample = sparks::hemisphere_sample(glm::normalize(glm::vec3{ 1,1,0 }), rng);
-    //glm::vec3 sample = sparks::hemisphere_sample_std(rng);
-    std::cout << "Sample ray " << glm::to_string(sample) << ", norm " << glm::length(sample) << std::endl;
-  }
+  //sparks::Lights lights;
+  //sparks::Plane plane;
+  //lights.AddLight(&plane, glm::vec3{ 0.0f }, 0.0f);
+  //auto light = lights.GetLight(0);
+  //std::cout << light.geometry->GetArea();
 }

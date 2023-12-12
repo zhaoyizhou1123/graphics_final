@@ -26,10 +26,10 @@ App::App(Renderer *renderer, const AppSettings &app_settings) {
 }
 
 void App::Run() {
-  OnInit();
+  OnInit(); // Initialize app
   while (!glfwWindowShouldClose(core_->GetWindow())) {
     if (!gui_pause_) {
-      OnLoop();
+      OnLoop(); // Loop to make updates
     }
     glfwPollEvents();
   }
@@ -41,7 +41,7 @@ void App::OnInit() {
   if (app_settings_.hardware_renderer) {
   } else {
     LAND_INFO("Starting worker threads.");
-    renderer_->StartWorkerThreads();
+    renderer_->StartWorkerThreads(); // I get to this branch
   }
 
   LAND_INFO("Allocating visual pipeline textures.");
@@ -150,6 +150,8 @@ void App::OnInit() {
     reset_accumulation_ = true;
   });
 
+
+  // Add OpenFile function into DropCallback
   core_->SetDropCallback([this](int path_count, const char **paths) {
     for (int i = 0; i < path_count; i++) {
       auto path = paths[i];
@@ -200,13 +202,13 @@ void App::OnInit() {
   RebuildRenderNode();
 }
 
-void App::OnLoop() {
+void App::OnLoop() { // Operations to do in loop
   static auto last_tp = std::chrono::steady_clock::now();
   auto cur_tp = std::chrono::steady_clock::now();
   auto dur = cur_tp - last_tp;
   auto ms = dur / std::chrono::milliseconds(1);
   last_tp += std::chrono::milliseconds(ms);
-  OnUpdate(ms);
+  OnUpdate(ms); // Update Scene/Image/Mesh, etc
   OnRender();
 }
 
@@ -339,6 +341,7 @@ void App::OnClose() {
   }
 }
 
+// Load a new Scene/Image/Mesh, update from Gui
 void App::UpdateImGui() {
   uint32_t current_sample;
   if (app_settings_.hardware_renderer) {
@@ -364,6 +367,8 @@ void App::UpdateImGui() {
     ImGui::Begin("Global Settings", &global_settings_window_open_,
                  ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize |
                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_MenuBar);
+
+    // Defines GUI
     if (ImGui::BeginMenuBar()) {
       if (ImGui::BeginMenu("File")) {
         char *result{nullptr};
@@ -372,6 +377,7 @@ void App::UpdateImGui() {
           result = tinyfd_openFileDialog("Open Scene", "", file_types.size(),
                                          file_types.data(),
                                          "Scene files (*.xml)", 0);
+          LAND_INFO("Open Scene returns: {}", result);
         }
         if (ImGui::MenuItem("Import Image..")) {
           std::vector<const char *> file_types = {"*.bmp", "*.png", "*.jpg",
@@ -379,12 +385,15 @@ void App::UpdateImGui() {
           result = tinyfd_openFileDialog(
               "Import Image", "", file_types.size(), file_types.data(),
               "Image Files (*.bmp, *.jpg, *.png, *hdr)", 1);
+
+          LAND_INFO("Import Image returns: {}", result);
         }
         if (ImGui::MenuItem("Import Mesh..")) {
           std::vector<const char *> file_types = {"*.obj"};
           result =
               tinyfd_openFileDialog("Import Mesh", "", file_types.size(),
                                     file_types.data(), "Mesh Files (*.obj)", 1);
+          LAND_INFO("Import Mesh returns: {}", result);
         }
         if (result) {
           std::vector<std::string> file_paths = absl::StrSplit(result, "|");
@@ -697,6 +706,7 @@ void App::UpdateHostStencilBuffer() {
   }
 }
 
+// Update the scene (Get the vertices, assets, etc.)
 void App::UpdateDeviceAssets() {
   auto &entities = renderer_->GetScene().GetEntities();
   bool rebuild_rt_assets = false;
@@ -1191,6 +1201,7 @@ void App::Capture(const std::string &file_path) {
   }
 }
 
+// Load the customized scene (Texture, mesh, scene, etc.), instead of the defaults
 void App::OpenFile(const std::string &path) {
   if (absl::EndsWith(path, ".png") || absl::EndsWith(path, ".jpg") ||
       absl::EndsWith(path, ".bmp") || absl::EndsWith(path, ".hdr") ||

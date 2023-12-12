@@ -8,6 +8,16 @@ class Camera {
   [[nodiscard]] glm::mat4 GetProjectionMatrix(float aspect,
                                               float t_min,
                                               float t_max) const;
+
+  /**
+  * @brief Generate a ray acording to pixel 
+  * 
+  * @param rand_u, rand_v: For position sampling
+  * @param rand_w: For angle sampling
+  * @param rand_r: For calculating origin radius
+  * @param origin: The resulting origin sampled on the lens (in camera space, will be converted to world space later)
+  * @param direction: The direction from origin to object
+  */
   void GenerateRay(float aspect,
                    glm::vec2 range_low,
                    glm::vec2 range_high,

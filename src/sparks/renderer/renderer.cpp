@@ -2,6 +2,7 @@
 
 #include "algorithm"
 #include "random"
+#include <glm/gtx/string_cast.hpp>
 
 namespace sparks {
 
@@ -25,12 +26,15 @@ const RendererSettings &Renderer::GetRendererSettings() const {
   return renderer_settings_;
 }
 
+// Start multiple threads to do rendering
 void Renderer::StartWorkerThreads() {
   uint32_t num_threads = std::thread::hardware_concurrency() - 2u;
   num_threads = std::max(num_threads, 1u);
+  //num_threads = 1;
   for (int i = 0; i < num_threads; i++) {
     worker_threads_.emplace_back(&Renderer::WorkerThread, this);
   }
+  LAND_INFO("Renderer: Started {} threads", num_threads);
 }
 
 void Renderer::PauseWorkers() {
@@ -63,7 +67,7 @@ void Renderer::StopWorkers() {
 }
 
 void Renderer::WorkerThread() {
-  LAND_TRACE("Worker thread started.");
+  LAND_INFO("Worker thread started.");
   TaskInfo my_task{};
   std::unique_lock<std::mutex> lock(task_queue_mutex_);
   lock.unlock();
@@ -74,7 +78,7 @@ void Renderer::WorkerThread() {
     while (true) {
       if (render_state_signal_ == RENDER_STATE_SIGNAL_RUN) {
         if (task_queue_.empty()) {
-          LAND_TRACE("Wait for task.");
+          LAND_INFO("Wait for task.");
           wait_for_queue_cv_.wait(lock);
         } else {
           my_task = task_queue_.front();
@@ -96,7 +100,7 @@ void Renderer::WorkerThread() {
         if (num_exited_thread_ == worker_threads_.size()) {
           wait_for_all_exit_.notify_all();
         }
-        LAND_TRACE("Worker thread exited.");
+        LAND_INFO("Worker thread exited.");
         return;
       }
     }
@@ -116,6 +120,7 @@ void Renderer::WorkerThread() {
                         path_tracer);
           sample_result[id] += result;
         }
+        //LAND_INFO("Finished pixel ({},{}). Total {}x{}.", i, j, my_task.height, my_task.width);
       }
     }
 
@@ -196,8 +201,8 @@ void Renderer::RayGeneration(int x,
                              int sample,
                              glm::vec3 &color_result,
                              PathTracer &path_tracer) const {
-  std::mt19937 xrd(x);
-  std::mt19937 yrd(y + std::uniform_int_distribution<int>()(xrd));
+  std::mt19937 xrd(x); // random number generator, here x is seed
+  std::mt19937 yrd(y + std::uniform_int_distribution<int>()(xrd)); // uniform distribution of int, no range, generate by xrd
   std::mt19937 rd(sample + std::uniform_int_distribution<int>()(yrd));
   glm::vec2 pos{(float(x) + 0.5f) / float(width_),
                 (float(y) + 0.5f) / float(height_)};
@@ -215,7 +220,12 @@ void Renderer::RayGeneration(int x,
   auto camera_to_world = scene_.GetCameraToWorld();
   origin = camera_to_world * glm::vec4(origin, 1.0f);
   direction = camera_to_world * glm::vec4(direction, 0.0f);
-  color_result = path_tracer.SampleRay(origin, direction, x, y, sample);
+  //color_result = path_tracer.SampleRay(origin, direction, x, y, sample); // Get the color of a sample ray
+  path_tracer.SetSeed(x ^ y ^ sample); // set the random seed of path tracer
+  color_result = path_tracer.SampleRayPathTrace(origin, direction);
+  //if ((x % (width_ / 100) == 0) && (y % (height_ / 100) == 0)) {
+  //  LAND_INFO("Pixel ({},{}), color {}", x, y, glm::to_string(color_result));
+  //}
 }
 
 void Renderer::RetrieveAccumulationResult(

@@ -1,5 +1,4 @@
 #include "plane.h"
-#include <random>
 #include <string>
 #include "grassland/util/logging.h"
 
@@ -53,29 +52,26 @@ float sparks::Plane::GetArea() const
     return area_;
 }
 
-glm::vec3 sparks::Plane::Sample(int seed_x, int seed_y, int seed_z) const
+glm::vec3 sparks::Plane::Sample(std::mt19937& rng) const
 {
-    std::mt19937 rng_x(seed_x);
-    std::mt19937 rng_y(seed_y);
-    std::mt19937 rng_z(seed_z);
     float pos_x, pos_y, pos_z;
     if (x_min_ == x_max_) {
         pos_x = x_min_;
     }
     else {
-        pos_x = std::uniform_real_distribution<float>(x_min_, x_max_)(rng_x);
+        pos_x = std::uniform_real_distribution<float>(x_min_, x_max_)(rng);
     }
     if (y_min_ == y_max_) {
         pos_y = y_min_;
     }
     else {
-        pos_y = std::uniform_real_distribution<float>(y_min_, y_max_)(rng_y);
+        pos_y = std::uniform_real_distribution<float>(y_min_, y_max_)(rng);
     }
     if (z_min_ == z_max_) {
         pos_z = z_min_;
     }
     else {
-        pos_z = std::uniform_real_distribution<float>(z_min_, z_max_)(rng_z);
+        pos_z = std::uniform_real_distribution<float>(z_min_, z_max_)(rng);
     }
     return glm::vec3{pos_x, pos_y, pos_z};
 }

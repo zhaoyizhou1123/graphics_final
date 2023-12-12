@@ -27,6 +27,10 @@ class Renderer {
   void Resize(uint32_t width, uint32_t height);
   void ResetAccumulation();
 
+  /* @brief Generate color of pixel sampled with one ray.
+  * @param x,y pixel position
+  * @param sample, the number of sample. Together with x,y, only used as seed
+  */
   void RayGeneration(int x,
                      int y,
                      int sample,
@@ -39,6 +43,8 @@ class Renderer {
   [[nodiscard]] bool IsPaused() const;
   int LoadTexture(const std::string &file_path);
   int LoadObjMesh(const std::string &file_path);
+
+  // Load a customized scene (Other than the default one)
   void LoadScene(const std::string &file_path);
 
   template <class ReturnType>
@@ -68,7 +74,7 @@ class Renderer {
   void WorkerThread();
 
   RendererSettings renderer_settings_;
-  Scene scene_{"../../scenes/base.xml"};
+  Scene scene_{"../../scenes/cornell_lucy_bunny_v2.xml"}; // Default scene
 
   /* CPU Renderer Assets */
   std::vector<glm::vec4> accumulation_color_;

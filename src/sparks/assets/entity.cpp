@@ -19,7 +19,7 @@ Material &Entity::GetMaterial() {
 }
 
 const Material &Entity::GetMaterial() const {
-  return material_;
+return material_;
 }
 
 const std::string &Entity::GetName() const {

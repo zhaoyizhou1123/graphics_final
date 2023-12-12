@@ -26,5 +26,10 @@ struct Material {
   Material() = default;
   explicit Material(const glm::vec3 &albedo);
   Material(Scene *scene, const tinyxml2::XMLElement *material_element);
+
+  glm::vec3 GetBrdf(
+    const glm::vec3& pos,
+    const glm::vec3& ray_in,
+    const glm::vec3& ray_out);
 };
 }  // namespace sparks

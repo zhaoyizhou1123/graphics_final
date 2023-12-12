@@ -1,6 +1,6 @@
 #include "sample.h"
+#include "sparks/util/util.h"
 #include <random>
-#include <glm/gtc/constants.hpp>
 
 namespace sparks {
 glm::vec3 hemisphere_sample(const glm::vec3 &normal, std::mt19937& rng)
@@ -14,7 +14,7 @@ glm::vec3 hemisphere_sample_std(std::mt19937& rng)
 	float eps1 = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
 	float cos_theta = eps0;
 	float sin_theta = glm::sqrt(1 - cos_theta * cos_theta);
-	float phi = 2 * glm::pi<float>() * eps1;
+	float phi = 2 * sparks::PI * eps1;
 	float cos_phi = glm::cos(phi);
 	float sin_phi = glm::sin(phi);
 	return glm::vec3(cos_phi * sin_theta, sin_phi * sin_theta, cos_theta);

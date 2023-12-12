@@ -62,4 +62,11 @@ Material::Material(Scene *scene, const tinyxml2::XMLElement *material_element)
 Material::Material(const glm::vec3 &albedo) : Material() {
   albedo_color = albedo;
 }
+
+glm::vec3 Material::GetBrdf(
+    const glm::vec3& pos,
+    const glm::vec3& ray_in,
+    const glm::vec3& ray_out) {
+  return glm::vec3();
+}
 }  // namespace sparks

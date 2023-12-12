@@ -1,40 +1,47 @@
 #include "light.h"
 #include <random>
 
-float sparks::Lights::GetTotalArea() const
+namespace sparks {
+float Lights::GetTotalArea() const
 {
 	return total_area_;
 }
 
-glm::vec3 sparks::Lights::Sample(int seed_x, int seed_y, int seed_z) const
-{	
+void Lights::Sample(int* light_idx, glm::vec3* pos, std::mt19937& rng) const
+{
 	// Sample a light source according to area
-	std::mt19937 rng_idx(seed_x ^ seed_y ^ seed_z);
-	int idx = std::discrete_distribution<int>(areas_.begin(), areas_.end())(rng_idx);
+	int idx = std::discrete_distribution<int>(areas_.begin(), areas_.end())(rng);
+	*light_idx = idx;
 
-	auto light = lights_[idx];
-	return light.geometry->Sample(seed_x, seed_y, seed_z);
+	const Light* light = &lights_[idx];
+	if (light->geometry == nullptr) {
+		LAND_ERROR("Geometry is nullptr!");
+		throw "Nullptr geometry!";
+	}
+	*pos = light->geometry->Sample(rng);
 }
 
-//void sparks::Lights::AddLight(const Light& light)
+//void Lights::AddLight(const Light& light)
 //{
 //	lights_.emplace_back(std::move(light));
 //	total_area_ += light.geometry->GetArea();
 //}
 //
-//void sparks::Lights::AddLight(Light&& light)
+//void Lights::AddLight(Light&& light)
 //{
 //	lights_.push_back(std::move(light));
 //	total_area_ += light.geometry->GetArea();
 //}
 
-void sparks::Lights::AddLight(Geometry* geometry, const glm::vec3 & emission, float emission_strength)
+void Lights::AddLight(std::unique_ptr<Geometry>&& geometry, const glm::vec3& emission, float emission_strength)
 {
-	lights_.emplace_back(geometry, emission, emission_strength);
 	areas_.emplace_back(geometry->GetArea());
 	total_area_ += geometry->GetArea();
+	lights_.emplace_back(std::move(geometry), emission, emission_strength);
 }
 
-sparks::Light sparks::Lights::GetLight(int idx) const {
-	return lights_[idx];
+const Light* Lights::GetLight(int idx) const {
+	return &(lights_[idx]);
 }
+} // namespace sparks
+

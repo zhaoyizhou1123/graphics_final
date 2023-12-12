@@ -34,6 +34,9 @@ class Scene {
   [[nodiscard]] int GetEntityCount() const;
   [[nodiscard]] std::vector<const char *> GetEntityNameList() const;
 
+  [[nodiscard]] Lights& GetLights();
+  [[nodiscard]] const Lights& GetLights() const;
+
   void SetCamera(const Camera &camera);
   Camera &GetCamera();
   [[nodiscard]] const Camera &GetCamera() const;
@@ -64,17 +67,28 @@ class Scene {
   [[nodiscard]] glm::vec4 SampleEnvmap(const glm::vec3 &direction) const;
 
   // @return t: The distance of intersection?
+  // @param: direction: Should be normalized.
   float TraceRay(const glm::vec3 &origin,
                  const glm::vec3 &direction,
                  float t_min,
                  float t_max,
                  HitRecord *hit_record) const;
 
-  /* @brief Get the color of scene point p given out ray direction, using path tracing
-  * @param p, the point on scene
-  * @param dir_out, the out direction
+  /* @brief Sample a ray for path tracing.
+  * @param pos, p
+  * @param ray_out, wo
+  * @param material, the material of p
+  * @return 
+  *   ray_in, sampled wi
+  *   weight, for diffuse, it's fr*cos/pdf_hemi/p_rr; for specular, it's 1; for principled, it could be other
   */
-  [[nodiscard]] glm::vec3 Shade(const glm::vec3 &p, const glm::vec3 &dir_out) const;
+  void SampleRay(
+    const glm::vec3& pos,
+    const glm::vec3& ray_out,
+    const Material& material,
+    glm::vec3& ray_in,
+    float& weight
+  );
 
   bool TextureCombo(const char *label, int *current_item) const;
   bool EntityCombo(const char *label, int *current_item) const;

@@ -5,6 +5,10 @@
 #include "vector"
 
 namespace sparks {
+
+/* @brief A subclass of Model.
+
+*/
 class Mesh : public Model {
  public:
   Mesh() = default;
