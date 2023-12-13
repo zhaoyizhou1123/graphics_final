@@ -86,6 +86,7 @@ glm::vec3 PathTracer::SampleRayPathTrace(glm::vec3 origin,
   //    return material->emission * material->emission_strength;
     
   // Not light source
+  glm::vec3 color = Shade_(hit_record, shade_dir);
   return Shade_(hit_record, shade_dir);
   //return glm::vec3{};
 }
@@ -96,11 +97,21 @@ glm::vec3 PathTracer::Shade_(HitRecord hit_record, const glm::vec3& dir_out){
   //LAND_INFO("Current bounce count {}", bounce_cnt_);
   if (material.material_type == MATERIAL_TYPE_EMISSION) { // emission
     // We may consider diffuse/specular light in principled BSDF
-    return ShadeEmission_(
+    glm::vec3 color = ShadeEmission_(
       dir_out,
       hit_record.normal,
       material.emission,
       material.emission_strength);
+    if (glm::any(glm::lessThan(color, glm::vec3{ 0.0f }))) {
+      LAND_INFO("Is front face {}", hit_record.front_face);
+      LAND_INFO("Geometry normal {}", glm::to_string(hit_record.geometry_normal));
+      LAND_INFO("Cosine {}", glm::dot(hit_record.normal, dir_out));
+      LAND_ERROR("Negative color {} at postion {} with normal {}", glm::to_string(color), glm::to_string(p), glm::to_string(hit_record.normal) );
+    }
+    if (color.x != color.y) {
+      LAND_WARN("Buggy color {}, emission {}", glm::to_string(color), glm::to_string(material.emission));
+    }
+    return color;
   } 
   else if (material.material_type == MATERIAL_TYPE_LAMBERTIAN) { // diffuse
     return ShadeDiffuse_(

@@ -21,6 +21,16 @@ class Entity {
   }
 
   template <class ModelType>
+  Entity(std::unique_ptr<ModelType> model,
+    const Material& material,
+    const glm::mat4& transform = glm::mat4{ 1.0f }) {
+    model_ = std::move(model);
+    material_ = material;
+    transform_ = transform;
+    name_ = model_->GetDefaultEntityName();
+  }
+
+  template <class ModelType>
   Entity(const ModelType &model,
          const Material &material,
          const glm::mat4 &transform,
@@ -30,6 +40,18 @@ class Entity {
     transform_ = transform;
     name_ = name;
   }
+
+  template <class ModelType>
+  Entity(std::unique_ptr<ModelType> model,
+    const Material& material,
+    const glm::mat4& transform,
+    const std::string& name) {
+    model_ = std::move(model);
+    material_ = material;
+    transform_ = transform;
+    name_ = name;
+  }
+
   [[nodiscard]] const Model *GetModel() const;
   [[nodiscard]] glm::mat4 &GetTransformMatrix();
   [[nodiscard]] const glm::mat4 &GetTransformMatrix() const;

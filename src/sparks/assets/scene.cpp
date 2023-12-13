@@ -308,14 +308,17 @@ int Scene::LoadTexture(const std::string &file_path) {
 }
 
 int Scene::LoadObjMesh(const std::string &file_path) {
-  AcceleratedMesh mesh;
+  //AcceleratedMesh mesh;
+  Mesh mesh;
   if (Mesh::LoadObjFile(file_path, mesh)) {
-    mesh.BuildAccelerationStructure();
-    return AddEntity(mesh, Material{}, glm::mat4{1.0f},
+    //auto acc_mesh = AcceleratedMesh(mesh);
+    //mesh.BuildAccelerationStructure();
+    return AddEntity(std::make_unique<AcceleratedMesh>(mesh), Material{}, glm::mat4{1.0f},
                      PathToFilename(file_path));
   } else {
     return -1;
   }
+  return -1;
 }
 
 Scene::Scene(const std::string& filename) : Scene() {
@@ -388,7 +391,7 @@ Scene::Scene(const std::string& filename) : Scene() {
             std::string geometry_type{ geometry_element->FindAttribute("type")->Value() };
             if (geometry_type == "plane") {
               auto geometry = std::make_unique<Plane>(geometry_element);
-              LAND_INFO("Add plane light with area {}", geometry->GetArea());
+              //LAND_INFO("Add plane light with area {}", geometry->GetArea());
               lights_.AddLight(
                 std::move(geometry),
                 material.emission,
@@ -408,11 +411,13 @@ Scene::Scene(const std::string& filename) : Scene() {
 
         auto name_attribute = child_element->FindAttribute("name");
         if (name_attribute) {
-          AddEntity(AcceleratedMesh(mesh), material, transformation,
+          AddEntity(
+            std::move(std::make_unique<AcceleratedMesh>(mesh)), material, transformation,
             std::string(name_attribute->Value()));
         }
         else {
-          AddEntity(AcceleratedMesh(mesh), material, transformation);
+          AddEntity(
+            std::move(std::make_unique<AcceleratedMesh>(mesh)), material, transformation);
         }
       }
       else {
@@ -422,7 +427,5 @@ Scene::Scene(const std::string& filename) : Scene() {
   }
   SetCameraToWorld(camera_to_world);
   UpdateEnvmapConfiguration();
-  LAND_INFO("Lights area {}", lights_.GetTotalArea());
-  LAND_INFO("Light 0 area {}", lights_.GetLight(0)->geometry->GetArea());
 }
 }  // namespace sparks

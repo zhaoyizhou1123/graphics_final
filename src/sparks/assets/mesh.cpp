@@ -7,6 +7,7 @@
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tiny_obj_loader.h"
+#include <glm/gtx/string_cast.hpp>
 
 namespace sparks {
 
@@ -82,7 +83,7 @@ float Mesh::TraceRay(const glm::vec3 &origin,
                      float t_min,
                      HitRecord *hit_record) const {
   float result = -1.0f;
-  for (int i = 0; i < indices_.size(); i += 3) {
+  for (int i = 0; i < indices_.size(); i += 3) { // iterate through all triangles
     int j = i + 1, k = i + 2;
     const auto &v0 = vertices_[indices_[i]];
     const auto &v1 = vertices_[indices_[j]];
@@ -107,7 +108,15 @@ float Mesh::TraceRay(const glm::vec3 &origin,
       result = t;
       if (hit_record) {
         auto geometry_normal = glm::normalize(
-            glm::cross(v2.position - v0.position, v1.position - v0.position));
+            glm::cross(v1.position - v0.position, v2.position - v0.position)); // Respect the order
+        if (glm::dot(geometry_normal, v0.normal) < 0) { // opposite direction 
+          LAND_ERROR("Opposite direction at v0 {}, v1 {}, v2 {}: geometry {}, normal {}", 
+            glm::to_string(v0.position), 
+            glm::to_string(v1.position),
+            glm::to_string(v2.position),
+            glm::to_string(geometry_normal), 
+            glm::to_string(v0.normal));
+        }
         if (glm::dot(geometry_normal, direction) < 0.0f) {
           hit_record->position = position;
           hit_record->geometry_normal = geometry_normal;
@@ -191,7 +200,7 @@ bool Mesh::LoadObjFile(const std::string &obj_file_path, Mesh &mesh) {
     // Loop over faces(polygon)
     size_t index_offset = 0;
     for (size_t f = 0; f < shapes[s].mesh.num_face_vertices.size(); f++) {
-      size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]);
+      size_t fv = size_t(shapes[s].mesh.num_face_vertices[f]); // number of vertices for face f
 
       // Loop over vertices in the face.
       std::vector<Vertex> face_vertices;
@@ -231,7 +240,7 @@ bool Mesh::LoadObjFile(const std::string &obj_file_path, Mesh &mesh) {
         Vertex v1 = face_vertices[i];
         Vertex v2 = face_vertices[i + 1];
         auto geometry_normal = glm::normalize(
-            glm::cross(v2.position - v0.position, v1.position - v0.position));
+            glm::cross(v1.position - v0.position, v2.position - v0.position));
         if (v0.normal == glm::vec3{0.0f, 0.0f, 0.0f}) {
           v0.normal = geometry_normal;
         } else if (glm::dot(geometry_normal, v0.normal) < 0.0f) {
@@ -263,10 +272,12 @@ bool Mesh::LoadObjFile(const std::string &obj_file_path, Mesh &mesh) {
   return true;
 }
 
+// Before this function, indices_ = {0,1,2,...,3f-1}, vertices_ has 3f elements
 void Mesh::MergeVertices() {
   std::vector<Vertex> vertices;
   std::vector<uint32_t> indices;
   std::unordered_map<Vertex, uint32_t, VertexHash> vertex_index_map;
+  // Push v into vertices if not pushed, and set the index of v
   auto index_func = [&vertices, &vertex_index_map](const Vertex &v) {
     if (vertex_index_map.count(v)) {
       return vertex_index_map.at(v);

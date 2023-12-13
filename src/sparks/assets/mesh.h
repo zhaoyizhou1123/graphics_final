@@ -35,6 +35,7 @@ class Mesh : public Model {
 
  protected:
   std::vector<Vertex> vertices_;
+  // Each entry is an index of vertex. Length is 3f. Faces are (i0,i1,i2); (i3,i4,i5); .... .
   std::vector<uint32_t> indices_;
 };
 }  // namespace sparks

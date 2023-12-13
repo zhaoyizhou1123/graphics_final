@@ -32,6 +32,7 @@ bool AxisAlignedBoundingBox::IsIntersect(const glm::vec3 &origin,
                                          const glm::vec3 &direction,
                                          float t_min,
                                          float t_max) const {
+  // Origin inside box
   if (x_low <= origin.x && origin.x <= x_high && y_low <= origin.y &&
       origin.y <= y_high && z_low <= origin.z && origin.z <= z_high) {
     return true;
@@ -98,6 +99,24 @@ AxisAlignedBoundingBox &AxisAlignedBoundingBox::operator|=(
   z_low = std::min(z_low, aabb.z_low);
   z_high = std::max(z_high, aabb.z_high);
   return *this;
+}
+
+std::string AxisAlignedBoundingBox::FindLongestAxis()
+{
+  float temp_longest_range = x_high - x_low;
+  std::string temp_axis = "x";
+  
+  float y_range = y_high - y_low;
+  if (temp_longest_range < y_range) {
+    temp_longest_range = y_range;
+    temp_axis = "y";
+  }
+  float z_range = z_high - z_low;
+  if (temp_longest_range < z_range) {
+    temp_longest_range = z_range;
+    temp_axis = "z";
+  }
+  return temp_axis;
 }
 
 }  // namespace sparks

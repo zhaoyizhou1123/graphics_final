@@ -8,6 +8,11 @@ template<class ContentType> // Union of contents in inner and leaf node
 class BinaryTree {
 public:
 	struct Node {
+		Node() {
+			content = nullptr;
+			left_child = nullptr;
+			right_child = nullptr;
+		}
 		Node(std::unique_ptr<ContentType> temp_content) {
 			content = std::move(temp_content);
 			left_child = nullptr;
@@ -17,6 +22,8 @@ public:
 		std::unique_ptr<Node> left_child;
 		std::unique_ptr<Node> right_child;
 	};
+	// Default constructor, build a root Node with no valid content
+	BinaryTree() : root_{ std::make_unique<Node>()} {}
 
 	BinaryTree(std::unique_ptr<ContentType> content) {
 		root_ = std::make_unique<Node >(std::move(content));

@@ -24,8 +24,8 @@
 		<index value="1"/>
 		<index value="3"/>
 		<index value="1"/>
-		<index value="3"/>
 		<index value="2"/>
+		<index value="3"/>
 
 		<geometry type="plane">
 			<!--<x min="10.0" max="546.0"/>
@@ -38,22 +38,22 @@
 
         <material type="emission">
             <emission value="1.0 1.0 1.0"/>
-            <emission_strength value="30.0"/>
+            <emission_strength value="5.0"/>
         </material>
     </model>
 
     <!--floor-->
     <model name="Floor">
-        <vertex position="552.8 0.0   0.0"/>
-        <vertex position="0.0 0.0   0.0"/>
-        <vertex position="0.0 0.0 559.2"/>
-        <vertex position="549.6 0.0 559.2"/>
+        <vertex position="557.0 0.1   0.0"/>
+        <vertex position="0.0 0.1   0.0"/>
+        <vertex position="0.0 0.1 560.0"/>
+        <vertex position="557.0 0.1 560.0"/>
         <index value="0"/>
         <index value="1"/>
         <index value="3"/>
         <index value="1"/>
-        <index value="3"/>
         <index value="2"/>
+        <index value="3"/>
 
         <material type="lambertian">
             <albedo value="0.8 0.8 0.8"/>
@@ -62,16 +62,16 @@
 
     <!--ceiling-->
     <model name="Ceiling">
-        <vertex position="556.0 548.8 0.0  "/>
-        <vertex position="556.0 548.8 559.2"/>
-        <vertex position="0.0 548.8 559.2"/>
+        <vertex position="557.0 548.8 0.0  "/>
+        <vertex position="557.0 548.8 560.0"/>
+        <vertex position="0.0 548.8 560.0"/>
         <vertex position="0.0 548.8   0.0"/>
         <index value="0"/>
         <index value="1"/>
         <index value="3"/>
         <index value="1"/>
-        <index value="3"/>
         <index value="2"/>
+        <index value="3"/>
 
         <material type="lambertian">
             <albedo value="0.8 0.8 0.8"/>
@@ -80,16 +80,16 @@
 
     <!--back wall-->
     <model name="Back Wall">
-        <vertex position="549.6   0.0 559.2"/>
-        <vertex position="0.0   0.0 559.2"/>
-        <vertex position="0.0 548.8 559.2"/>
-        <vertex position="556.0 548.8 559.2"/>
+        <vertex position="557.0   0.0 559.8"/>
+        <vertex position="0.0   0.0 559.8"/>
+        <vertex position="0.0 550.0 559.8"/>
+        <vertex position="557.0 550.0 559.8"/>
         <index value="0"/>
         <index value="1"/>
         <index value="3"/>
         <index value="1"/>
-        <index value="3"/>
         <index value="2"/>
+        <index value="3"/>
 
         <material type="lambertian">
             <albedo value="0.8 0.8 0.8"/>
@@ -98,37 +98,39 @@
 
     <!--right wall-->
     <model name="Right Wall">
-        <vertex position="0.0   0.0 559.2 "/>
-        <vertex position="0.0   0.0   0.0"/>
-        <vertex position="0.0 548.8   0.0"/>
-        <vertex position="0.0 548.8 559.2"/>
+        <vertex position="0.1   0.0 560.0 "/>
+        <vertex position="0.1   0.0   0.0"/>
+        <vertex position="0.1 550.0   0.0"/>
+        <vertex position="0.1 550.0 560.0"/>
         <index value="0"/>
         <index value="1"/>
         <index value="3"/>
         <index value="1"/>
-        <index value="3"/>
         <index value="2"/>
+        <index value="3"/>
 
         <material type="lambertian">
-            <albedo value="0.0 0.8 0.0"/>
+			<albedo value="0.0 0.8 0.0"/>
+            <!--<albedo value="0.8 0.8 0.8"/>-->
         </material>
     </model>
 
     <!--left wall-->
     <model name="Left Wall">
-        <vertex position="552.8   0.0   0.0 "/>
-        <vertex position="549.6   0.0 559.2"/>
-        <vertex position="556.0 548.8 559.2"/>
-        <vertex position="556.0 548.8   0.0"/>
+        <vertex position="556.8   0.0   0.0 "/>
+        <vertex position="556.8   0.0 560.0"/>
+        <vertex position="556.8 550.0 560.0"/>
+        <vertex position="556.8 550.0   0.0"/>
         <index value="0"/>
         <index value="1"/>
         <index value="3"/>
         <index value="1"/>
-        <index value="3"/>
         <index value="2"/>
+        <index value="3"/>
 
         <material type="lambertian">
             <albedo value="0.8 0.0 0.0"/>
+			<!--<albedo value="0.8 0.8 0.8"/>-->
         </material>
     </model>
 
@@ -145,7 +147,7 @@
         </material>
     </model>
 
-    <model type="obj" name="Lucy">
+    <!--<model type="obj" name="Lucy">
         <filename value="../../meshes/lucy.obj"/>
         <transform type="world">
             <scale value="1.5 1.5 1.5"/>
@@ -156,6 +158,6 @@
         <material type="lambertian">
             <albedo value="0.615 0.574 0.249"/>
         </material>
-    </model>
+    </model>-->
 
 </scene>

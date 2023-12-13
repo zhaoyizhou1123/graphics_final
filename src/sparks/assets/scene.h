@@ -26,6 +26,11 @@ class Scene {
     entities_.emplace_back(args...);
     return int(entities_.size() - 1);
   }
+  template <class T, class... Args>
+  int AddEntity(std::unique_ptr<T> ptr, Args... args) {
+    entities_.emplace_back(std::move(ptr), args...);
+    return int(entities_.size() - 1);
+  }
 
   [[nodiscard]] Entity &GetEntity(int entity_index);
   [[nodiscard]] const Entity &GetEntity(int entity_index) const;
