@@ -33,6 +33,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
   for (int i = 0; i < max_bounce; i++) {
     auto t = scene_->TraceRay(origin, direction, 1e-3f, 1e4f, &hit_record);
     if (t > 0.0f) {
+      LAND_INFO("Get Intersection with distance {}", t);
       auto &material =
           scene_->GetEntity(hit_record.hit_entity_id).GetMaterial();
       if (material.material_type == MATERIAL_TYPE_EMISSION) {

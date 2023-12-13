@@ -67,7 +67,7 @@ void Renderer::StopWorkers() {
 }
 
 void Renderer::WorkerThread() {
-  LAND_INFO("Worker thread started.");
+  LAND_TRACE("Worker thread started.");
   TaskInfo my_task{};
   std::unique_lock<std::mutex> lock(task_queue_mutex_);
   lock.unlock();
@@ -78,7 +78,7 @@ void Renderer::WorkerThread() {
     while (true) {
       if (render_state_signal_ == RENDER_STATE_SIGNAL_RUN) {
         if (task_queue_.empty()) {
-          LAND_INFO("Wait for task.");
+          LAND_TRACE("Wait for task.");
           wait_for_queue_cv_.wait(lock);
         } else {
           my_task = task_queue_.front();
@@ -100,7 +100,7 @@ void Renderer::WorkerThread() {
         if (num_exited_thread_ == worker_threads_.size()) {
           wait_for_all_exit_.notify_all();
         }
-        LAND_INFO("Worker thread exited.");
+        LAND_TRACE("Worker thread exited.");
         return;
       }
     }

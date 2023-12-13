@@ -16,4 +16,11 @@ std::string PathToFilename(const std::string &file_path) {
   }
   return grassland::util::WideStringToU8String(short_name);
 }
+
+void show_vector(std::vector<int> v) {
+  for (auto itr = v.begin(); itr != v.end(); itr++) {
+    std::cout << *itr << " ";
+  }
+  std::cout << std::endl;
+}
 }  // namespace sparks

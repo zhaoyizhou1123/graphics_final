@@ -2,6 +2,7 @@
 
 #include "algorithm"
 #include "grassland/grassland.h"
+#include <iostream>
 
 namespace sparks {
 
@@ -31,11 +32,17 @@ AxisAlignedBoundingBox::AxisAlignedBoundingBox(const glm::vec3 &position) {
 bool AxisAlignedBoundingBox::IsIntersect(const glm::vec3 &origin,
                                          const glm::vec3 &direction,
                                          float t_min,
-                                         float t_max) const {
+                                         float t_max,
+                                         float* range_min, 
+                                         float* range_max) const {
+  bool has_intersect = false;
   // Origin inside box
   if (x_low <= origin.x && origin.x <= x_high && y_low <= origin.y &&
       origin.y <= y_high && z_low <= origin.z && origin.z <= z_high) {
-    return true;
+    has_intersect = true;
+  }
+  if (t_min < 0.0f) {
+    LAND_ERROR("t_min should be set non-negative, but got {}", t_min);
   }
   float intersection_range_low = t_max * (1.0f + t_min);
   float intersection_range_high = 0.0f;
@@ -62,7 +69,13 @@ bool AxisAlignedBoundingBox::IsIntersect(const glm::vec3 &origin,
   TestIntersection(x, y, z);
   TestIntersection(z, x, y);
   TestIntersection(y, z, x);
-  return intersection_range_high >= t_min && intersection_range_low <= t_max;
+  // If intersect, always two intersections, then we get a range (min might <0)
+  *range_min = std::max(intersection_range_low, t_min); // Assume intersection exists, in case min < t_min
+  *range_max = intersection_range_high;
+  if (intersection_range_high >= t_min && intersection_range_low <= t_max) { // Case for exterior origin
+    has_intersect = true;
+  }
+  return has_intersect;
 }
 
 AxisAlignedBoundingBox AxisAlignedBoundingBox::operator&(
@@ -101,6 +114,12 @@ AxisAlignedBoundingBox &AxisAlignedBoundingBox::operator|=(
   return *this;
 }
 
+bool AxisAlignedBoundingBox::operator==(const AxisAlignedBoundingBox& aabb) const {
+  return (x_low == aabb.x_low) && (x_high == aabb.x_high)
+    && (y_low == aabb.y_low) && (y_high == aabb.y_high)
+    && (z_low == aabb.z_low) && (z_high == aabb.z_high);
+}
+
 std::string AxisAlignedBoundingBox::FindLongestAxis()
 {
   float temp_longest_range = x_high - x_low;
@@ -117,6 +136,12 @@ std::string AxisAlignedBoundingBox::FindLongestAxis()
     temp_axis = "z";
   }
   return temp_axis;
+}
+
+void AxisAlignedBoundingBox::ShowBox() const {
+  std::cout << "Box: (" << x_low << ", " << x_high << ") x ";
+  std::cout << "(" << y_low << ", " << y_high << ") x ";
+  std::cout << "(" << z_low << ", " << z_high << ")\n";
 }
 
 }  // namespace sparks

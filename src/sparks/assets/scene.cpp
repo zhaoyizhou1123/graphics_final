@@ -406,7 +406,7 @@ Scene::Scene(const std::string& filename) : Scene() {
           }
         }
 
-
+        // bunny, lucy contain transformtion attribute to move them to the correct place in scene
         glm::mat4 transformation = XmlComposeTransformMatrix(child_element);
 
         auto name_attribute = child_element->FindAttribute("name");

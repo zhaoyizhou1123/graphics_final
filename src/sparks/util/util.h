@@ -1,9 +1,12 @@
 #pragma once
 #include "grassland/util/util.h"
+#include <iostream>
 
 namespace sparks {
 constexpr float PI = 3.14159265358979323f;
 constexpr float INV_PI = 0.31830988618379067f;
 
 std::string PathToFilename(const std::string &file_path);
+
+void show_vector(std::vector<int> v);
 }  // namespace sparks
