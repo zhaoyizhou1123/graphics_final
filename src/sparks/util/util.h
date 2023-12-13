@@ -1,6 +1,7 @@
 #pragma once
 #include "grassland/util/util.h"
 #include <iostream>
+#include <string>
 
 namespace sparks {
 constexpr float PI = 3.14159265358979323f;

@@ -60,6 +60,7 @@ class AcceleratedMesh : public Mesh {
     glm::vec3 GetCenter_(int face_index);
 
     /*@brief Recursively trace node via Bvh
+    * We guarantee the ray intersects with the bounding box of cur_node, and could have a nearer intersection.
     * @param cur_node, the current root of subtree to search
     * @param cur_t_min, the currently nearest intersection found. Initialized as -1.0f
     */

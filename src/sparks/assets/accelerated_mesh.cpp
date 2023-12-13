@@ -25,6 +25,14 @@ float AcceleratedMesh::TraceRay(const glm::vec3 &origin,
     return Mesh::TraceRay(origin, direction, t_min, hit_record);
   }
   // Use acceleration structure
+  const BvhNode* root = bvh_->GetRoot();
+  float range_min, range_max;
+  bool has_intersect = root->content->box.IsIntersect(origin, direction, t_min, 1e5, &range_min, &range_max);
+  // No intersection, return the original result
+  if (!has_intersect) {
+    return -1.0f;
+  }
+  // Has intersection
   return TraceRayRecursive_(
     bvh_->GetRoot(),
     -1.0f,
@@ -134,24 +142,7 @@ glm::vec3 AcceleratedMesh::GetCenter_(int face_index)
 
 float AcceleratedMesh::TraceRayRecursive_(BvhNode* cur_node, float cur_t_min, const glm::vec3& origin, const glm::vec3& direction, float t_min, HitRecord* hit_record) const
 {
-//  LAND_INFO("Test Intersection with box ({},{}) x ({},{}) x ({},{})",
-//    cur_node->content->box.x_low, cur_node->content->box.x_high,
-//    cur_node->content->box.y_low, cur_node->content->box.y_high,
-//    cur_node->content->box.z_low, cur_node->content->box.z_high);
-  float range_min, range_max;
-  bool has_intersect = cur_node->content->box.IsIntersect(origin, direction, t_min, 1e5, &range_min, &range_max);
-  // No intersection, return the original result
-  if (!has_intersect) {
-    //LAND_INFO("No intersection, return.");
-    return cur_t_min;
-  }
-  // Has intersection, previous result exists and cannot get nearer result in this box, return the original result
-  if (cur_t_min >= t_min && range_min >= cur_t_min) {
-    return cur_t_min;
-  }
-  // Find intersection in this box
   if (cur_node->content->is_leaf) { // Is a leaf
-    //LAND_INFO("Test leaf node");
     HitRecord local_hit_record;
     float t_temp = TraceRayLeaf_(
       cur_node->content->face_indices,
@@ -172,22 +163,92 @@ float AcceleratedMesh::TraceRayRecursive_(BvhNode* cur_node, float cur_t_min, co
     }
   }
   else { // Is an internal node
-    // A better idea is to test the potentially nearer child node
-    float left_t_min = TraceRayRecursive_(
-      cur_node->left_child.get(),
-      cur_t_min,
-      origin,
-      direction,
-      t_min,
-      hit_record);
-    float right_t_min = TraceRayRecursive_(
-      cur_node->right_child.get(),
-      left_t_min,
-      origin,
-      direction,
-      t_min,
-      hit_record);
-    return right_t_min;
+    // Test intersection with left node bounding box
+    BvhNode* left_child = cur_node->left_child.get();
+    float range_min_left, range_max_left;
+    bool has_intersect_left = left_child->content->box.IsIntersect(origin, direction, t_min, 1e5, &range_min_left, &range_max_left);
+    bool should_test_left = has_intersect_left && ((cur_t_min < 0) || (range_min_left < cur_t_min));
+
+    BvhNode* right_child = cur_node->right_child.get();
+    float range_min_right, range_max_right;
+    bool has_intersect_right = right_child->content->box.IsIntersect(origin, direction, t_min, 1e5, &range_min_right, &range_max_right);
+    bool should_test_right = has_intersect_right && ((cur_t_min < 0) || (range_min_right < cur_t_min));
+
+    if ((!should_test_left) && (!should_test_right)) { // This can happen, don't need to test anything
+      //float range_min_self, range_max_self;
+      //bool has_intersect_self = cur_node->content->box.IsIntersect(origin, direction, t_min, 1e5, &range_min_self, &range_max_self);
+      //bool should_test_self = has_intersect_self && ((cur_t_min < 0) || (range_min_self < cur_t_min));
+      //if (!should_test_self) {
+      //  LAND_ERROR("The node's bounding box should be guaranteed to have a better intersection!");
+      //  return -100.0f;
+      //}
+      //const AxisAlignedBoundingBox& box_left = left_child->content->box;
+      //const AxisAlignedBoundingBox& box_right = right_child->content->box;
+      //const AxisAlignedBoundingBox& box_self = cur_node->content->box;
+      //box_left.ShowBox("Left Box: ");
+      //box_right.ShowBox("Right Box: ");
+      //box_self.ShowBox("Parent box: ");
+      //LAND_ERROR("Current node should have better intersection, but neither of its children have!");
+      //return -100.0f;
+      return cur_t_min;
+    }
+    if (!should_test_left) { // test right only
+      float right_t_min = TraceRayRecursive_(
+        right_child,
+        cur_t_min,
+        origin,
+        direction,
+        t_min,
+        hit_record);
+      return right_t_min;
+    }
+    if (!should_test_left) { // test left only
+      float left_t_min = TraceRayRecursive_(
+        left_child,
+        cur_t_min,
+        origin,
+        direction,
+        t_min,
+        hit_record);
+      return left_t_min;
+    }
+    // Test both left and right
+    float avg_dist_left = (range_min_left + range_max_left) / 2;
+    float avg_dist_right = (range_min_right + range_max_right) / 2;
+    if (avg_dist_left < avg_dist_right) { // First left then right
+      float left_t_min = TraceRayRecursive_(
+        left_child,
+        cur_t_min,
+        origin,
+        direction,
+        t_min,
+        hit_record);
+      float right_t_min = TraceRayRecursive_(
+        right_child,
+        left_t_min,
+        origin,
+        direction,
+        t_min,
+        hit_record);
+      return right_t_min;
+    }
+    else { // First right then left
+      float right_t_min = TraceRayRecursive_(
+        right_child,
+        cur_t_min,
+        origin,
+        direction,
+        t_min,
+        hit_record);
+      float left_t_min = TraceRayRecursive_(
+        left_child,
+        right_t_min,
+        origin,
+        direction,
+        t_min,
+        hit_record);
+      return left_t_min;
+    }
   }
 }
 

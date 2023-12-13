@@ -36,7 +36,7 @@ struct AxisAlignedBoundingBox {
 
   bool operator==(const AxisAlignedBoundingBox& aabb) const; // union
 
-  void ShowBox() const;
+  void ShowBox(const std::string& prefix = "") const;
 
   // Return the longest axis of box, 'x' or 'y' or 'z'
   std::string FindLongestAxis();

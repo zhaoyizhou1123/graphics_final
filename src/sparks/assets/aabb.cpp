@@ -71,7 +71,7 @@ bool AxisAlignedBoundingBox::IsIntersect(const glm::vec3 &origin,
   TestIntersection(y, z, x);
   // If intersect, always two intersections, then we get a range (min might <0)
   *range_min = std::max(intersection_range_low, t_min); // Assume intersection exists, in case min < t_min
-  *range_max = intersection_range_high;
+  *range_max = std::min(intersection_range_high, t_max);
   if (intersection_range_high >= t_min && intersection_range_low <= t_max) { // Case for exterior origin
     has_intersect = true;
   }
@@ -138,10 +138,8 @@ std::string AxisAlignedBoundingBox::FindLongestAxis()
   return temp_axis;
 }
 
-void AxisAlignedBoundingBox::ShowBox() const {
-  std::cout << "Box: (" << x_low << ", " << x_high << ") x ";
-  std::cout << "(" << y_low << ", " << y_high << ") x ";
-  std::cout << "(" << z_low << ", " << z_high << ")\n";
+void AxisAlignedBoundingBox::ShowBox(const std::string& prefix) const {
+  LAND_INFO("{}({}, {}) x ({}, {}) x ({}, {})", prefix, x_low, x_high, y_low, y_high, z_low, z_high);
 }
 
 }  // namespace sparks
