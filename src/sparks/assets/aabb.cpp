@@ -4,6 +4,8 @@
 #include "grassland/grassland.h"
 #include <iostream>
 
+#include <glm/gtx/string_cast.hpp>
+
 namespace sparks {
 
 AxisAlignedBoundingBox::AxisAlignedBoundingBox(float x_low,
@@ -75,6 +77,8 @@ bool AxisAlignedBoundingBox::IsIntersect(const glm::vec3 &origin,
   if (intersection_range_high >= t_min && intersection_range_low <= t_max) { // Case for exterior origin
     has_intersect = true;
   }
+  //ShowBox("Box: ");
+  //LAND_INFO("Origin {}, direction {}, intersect {}", glm::to_string(origin), glm::to_string(direction), has_intersect);
   return has_intersect;
 }
 

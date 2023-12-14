@@ -42,6 +42,29 @@ float AcceleratedMesh::TraceRay(const glm::vec3 &origin,
     hit_record);
 }
 
+float AcceleratedMesh::TraceRayImprove(const glm::vec3& origin, const glm::vec3& direction, float t_min, float cur_t_min, HitRecord* hit_record) const
+{
+  if (!use_accelerate_) { // Do not use acceleration structure
+    return Mesh::TraceRay(origin, direction, t_min, hit_record);
+  }
+  // Use acceleration structure
+  const BvhNode* root = bvh_->GetRoot();
+  float range_min, range_max;
+  bool has_intersect = root->content->box.IsIntersect(origin, direction, t_min, 1e5, &range_min, &range_max);
+  // No intersection, return the original result
+  if (!has_intersect || (cur_t_min >= 0.0f && range_min >= cur_t_min)) {
+    return -1.0f;
+  }
+  // Has intersection
+  return TraceRayRecursive_(
+    bvh_->GetRoot(),
+    cur_t_min,
+    origin,
+    direction,
+    t_min,
+    hit_record);
+}
+
 int AcceleratedMesh::GetNumFaces()
 {
   return indices_.size() / 3;
@@ -55,7 +78,6 @@ void AcceleratedMesh::BuildAccelerationStructure() {
   bvh_ = std::make_unique<Bvh>();
   BvhNode* root = bvh_->GetRoot();
   BuildBvhRecursive_(root, faces);
-  LAND_INFO("Building bounding volume hierarchy completed");
 }
 
 //void AcceleratedMesh::GetFaces_()

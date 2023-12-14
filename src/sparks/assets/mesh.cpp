@@ -142,6 +142,69 @@ float Mesh::TraceRay(const glm::vec3 &origin,
   return result;
 }
 
+float Mesh::TraceRayImprove(const glm::vec3& origin, const glm::vec3& direction, float t_min, float cur_t_min, HitRecord* hit_record) const
+{
+  float result = cur_t_min;
+  for (int i = 0; i < indices_.size(); i += 3) { // iterate through all triangles
+    int j = i + 1, k = i + 2;
+    const auto& v0 = vertices_[indices_[i]];
+    const auto& v1 = vertices_[indices_[j]];
+    const auto& v2 = vertices_[indices_[k]];
+
+    glm::mat3 A = glm::mat3(v1.position - v0.position,
+      v2.position - v0.position, -direction);
+    if (std::abs(glm::determinant(A)) < 1e-9f) {
+      continue;
+    }
+    A = glm::inverse(A);
+    auto uvt = A * (origin - v0.position);
+    auto& t = uvt.z;
+    if (t < t_min || (result > 0.0f && t > result)) {
+      continue;
+    }
+    auto& u = uvt.x;
+    auto& v = uvt.y;
+    auto w = 1.0f - u - v;
+    auto position = origin + t * direction;
+    if (u >= 0.0f && v >= 0.0f && u + v <= 1.0f) {
+      result = t;
+      if (hit_record) {
+        auto geometry_normal = glm::normalize(
+          glm::cross(v1.position - v0.position, v2.position - v0.position)); // Respect the order
+        if (glm::dot(geometry_normal, v0.normal) < 0) { // opposite direction 
+          LAND_ERROR("Opposite direction at v0 {}, v1 {}, v2 {}: geometry {}, normal {}",
+            glm::to_string(v0.position),
+            glm::to_string(v1.position),
+            glm::to_string(v2.position),
+            glm::to_string(geometry_normal),
+            glm::to_string(v0.normal));
+        }
+        if (glm::dot(geometry_normal, direction) < 0.0f) {
+          hit_record->position = position;
+          hit_record->geometry_normal = geometry_normal;
+          hit_record->normal = v0.normal * w + v1.normal * u + v2.normal * v;
+          hit_record->tangent =
+            v0.tangent * w + v1.tangent * u + v2.tangent * v;
+          hit_record->tex_coord =
+            v0.tex_coord * w + v1.tex_coord * u + v2.tex_coord * v;
+          hit_record->front_face = true;
+        }
+        else {
+          hit_record->position = position;
+          hit_record->geometry_normal = -geometry_normal;
+          hit_record->normal = -(v0.normal * w + v1.normal * u + v2.normal * v);
+          hit_record->tangent =
+            -(v0.tangent * w + v1.tangent * u + v2.tangent * v);
+          hit_record->tex_coord =
+            v0.tex_coord * w + v1.tex_coord * u + v2.tex_coord * v;
+          hit_record->front_face = false;
+        }
+      }
+    }
+  }
+  return result;
+}
+
 void Mesh::WriteObjFile(const std::string &file_path) const {
   std::ofstream file(file_path);
   if (file) {

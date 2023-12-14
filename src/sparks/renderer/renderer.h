@@ -97,6 +97,7 @@ class Renderer {
   uint32_t height_{0};
 };
 
+// If threads working, pause all worker threads, perform function, and then resume worker threads
 template <>
 void Renderer::SafeOperation(const std::function<void()> &func);
 }  // namespace sparks

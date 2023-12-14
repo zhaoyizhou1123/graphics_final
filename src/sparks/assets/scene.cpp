@@ -7,6 +7,8 @@
 #include "sparks/util/util.h"
 #include "sparks/geometries/plane.h"
 #include <memory>
+#include <numeric>
+#include <glm/gtx/string_cast.hpp>
 
 namespace sparks {
 
@@ -211,10 +213,18 @@ float Scene::TraceRay(const glm::vec3 &origin,
                       float t_min,
                       float t_max,
                       HitRecord *hit_record) const {
+  const std::vector<int>& entities_order_list = RayTracingPreSort_(
+    origin,
+    direction,
+    t_min,
+    t_max);
+  //LAND_INFO("Entity list size {}", entities_order_list.size());
   float result = -1.0f;
   HitRecord local_hit_record;
   float local_result;
-  for (int entity_id = 0; entity_id < entities_.size(); entity_id++) {
+  // Iterate through entities_order_list elements
+  for (auto itr = entities_order_list.begin(); itr != entities_order_list.end(); itr++) {
+    int entity_id = *itr; // current entity index
     auto &entity = entities_[entity_id];
     auto &transform = entity.GetTransformMatrix();
     auto inv_transform = glm::inverse(transform);
@@ -224,10 +234,11 @@ float Scene::TraceRay(const glm::vec3 &origin,
     if (transformed_direction_length < 1e-6) {
       continue;
     }
-    local_result = entity.GetModel()->TraceRay(
+    // Improvement, use result in place of t_min, when a valid result already exists
+    local_result = entity.GetModel()->TraceRayImprove(
         inv_transform * glm::vec4{origin, 1.0f},
-        transformed_direction / transformed_direction_length, t_min,
-        hit_record ? &local_hit_record : nullptr);
+        transformed_direction / transformed_direction_length, t_min * transformed_direction_length,
+        result * transformed_direction_length, hit_record ? &local_hit_record : nullptr);
     local_result /= transformed_direction_length;
     if (local_result > t_min && local_result < t_max &&
         (result < 0.0f || local_result < result)) {
@@ -428,4 +439,65 @@ Scene::Scene(const std::string& filename) : Scene() {
   SetCameraToWorld(camera_to_world);
   UpdateEnvmapConfiguration();
 }
+
+std::vector<int> Scene::RayTracingPreSort_(const glm::vec3& origin, const glm::vec3& direction, float t_min, float t_max) const
+{
+  struct Ref {
+    Ref(float dist, int idx): ref_dist{dist}, entity_index {idx} {}
+    float ref_dist;
+    int entity_index;
+  };
+  std::vector<Ref> list_to_sort;
+  list_to_sort.reserve(entities_.size());
+  //std::vector<bool> intersect_list(entities_.size());
+  for (int i = 0; i < entities_.size(); i++) {
+    auto& entity = entities_[i];
+    auto model = entity.GetModel();
+    // Transform direction according to entity property
+    auto& transform = entities_[i].GetTransformMatrix();
+    auto inv_transform = glm::inverse(transform);
+    auto transformed_direction =
+      glm::vec3{ inv_transform * glm::vec4{direction, 0.0f} };
+    auto transformed_direction_length = glm::length(transformed_direction);
+    if (transformed_direction_length < 1e-6) {
+      continue;
+    }
+    auto acc_mesh = dynamic_cast<const AcceleratedMesh*>(model);
+    if (acc_mesh == nullptr) {
+      LAND_ERROR("Some entities did not use accelerated mesh!");
+    }
+    const AxisAlignedBoundingBox& box = acc_mesh->GetBoundingBox();
+    glm::vec3 origin_trans = inv_transform * glm::vec4{ origin, 1.0f };
+    //box.ShowBox();
+    //LAND_INFO("Origin {}", glm::to_string(origin_trans));
+    //LAND_INFO("Transformed direction {}, length {}", glm::to_string(transformed_direction / transformed_direction_length), transformed_direction_length);
+    float range_min, range_max;
+    bool intersect = box.IsIntersect(
+      origin_trans,
+      transformed_direction / transformed_direction_length, 
+      t_min * transformed_direction_length, t_max * transformed_direction_length, &range_min, &range_max);
+    if (intersect) {
+      list_to_sort.emplace_back((range_min + range_max) / 2 / transformed_direction_length, i);
+    }
+    //intersect_list[i] = intersect;
+  }
+  auto compare = [this](const Ref& r1, const Ref& r2) -> bool {
+    return r1.ref_dist < r2.ref_dist;
+    };
+  std::sort(list_to_sort.begin(), list_to_sort.end(), compare);
+  std::vector<int> entities_order_list(list_to_sort.size());
+  for (int i = 0; i < list_to_sort.size(); i++) {
+    entities_order_list[i] = list_to_sort[i].entity_index;
+  }
+  //if (entities_order_list.size() == 1) {
+  //  LAND_WARN("list size 1 with origin {}, direction {}", glm::to_string(origin), glm::to_string(direction));
+  //}
+  //if (entities_order_list.empty()) {
+  //  LAND_ERROR("Empty list with origin {}, direction {}", glm::to_string(origin), glm::to_string(direction));
+  //}
+  //LAND_INFO("PreSort finishes with list size {}", entities_order_list.size());
+  //show_vector(entities_order_list);
+  return entities_order_list;
+}
+
 }  // namespace sparks

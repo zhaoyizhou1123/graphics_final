@@ -72,7 +72,7 @@ void Renderer::WorkerThread() {
   std::unique_lock<std::mutex> lock(task_queue_mutex_);
   lock.unlock();
   std::vector<glm::vec3> sample_result;
-  PathTracer path_tracer(&renderer_settings_, &scene_);
+  PathTracer path_tracer(&renderer_settings_, &scene_); // each thread has its own path tracer
   while (true) {
     lock.lock();
     while (true) {
@@ -81,7 +81,7 @@ void Renderer::WorkerThread() {
           LAND_TRACE("Wait for task.");
           wait_for_queue_cv_.wait(lock);
         } else {
-          my_task = task_queue_.front();
+          my_task = task_queue_.front(); // Get task
           task_queue_.pop();
           auto push_task = my_task;
           push_task.sample += renderer_settings_.num_samples;
@@ -108,6 +108,7 @@ void Renderer::WorkerThread() {
 
     sample_result.resize(my_task.width * my_task.height);
 
+    // Render each pixel in this task
     for (uint32_t i = 0; i < my_task.height; i++) {
       for (uint32_t j = 0; j < my_task.width; j++) {
         uint32_t id = i * my_task.width + j;
@@ -149,6 +150,7 @@ void Renderer::Resize(uint32_t width, uint32_t height) {
     height_ = height;
     accumulation_number_.resize(width_ * height_);
     accumulation_color_.resize(width_ * height_);
+    // Clear accumulation number and color
     std::memset(accumulation_number_.data(), 0,
                 sizeof(float) * accumulation_number_.size());
     std::memset(accumulation_color_.data(), 0,
@@ -156,6 +158,7 @@ void Renderer::Resize(uint32_t width, uint32_t height) {
     while (!task_queue_.empty()) {
       task_queue_.pop();
     }
+    // Split the rendering task. Each task contains a 4x4 pixel
     const uint32_t task_width = 4;
     const uint32_t task_height = 4;
     std::vector<TaskInfo> task_list;
@@ -221,7 +224,7 @@ void Renderer::RayGeneration(int x,
   origin = camera_to_world * glm::vec4(origin, 1.0f);
   direction = camera_to_world * glm::vec4(direction, 0.0f);
   //color_result = path_tracer.SampleRay(origin, direction, x, y, sample); // Get the color of a sample ray
-  path_tracer.SetSeed(x ^ y ^ sample); // set the random seed of path tracer
+  path_tracer.SetSeed(std::uniform_int_distribution<int>()(rd)); // set the random seed of path tracer
   color_result = path_tracer.SampleRayPathTrace(origin, direction);
   //if ((x % (width_ / 100) == 0) && (y % (height_ / 100) == 0)) {
   //  LAND_INFO("Pixel ({},{}), color {}", x, y, glm::to_string(color_result));

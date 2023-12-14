@@ -42,8 +42,7 @@ sparks::Plane::Plane(const tinyxml2::XMLElement* element)
     if (degenerate_cnt != 1) {
         throw "The plane's degenerate dim is not 0!";
     }
-    
-    LAND_INFO("Range: x {}, y {}, z{}", x_range, y_range, z_range);
+   
     area_ = x_range * y_range * z_range;
 }
 

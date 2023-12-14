@@ -23,14 +23,22 @@ class AcceleratedMesh : public Mesh {
     AcceleratedMesh(const std::vector<Vertex> &vertices,
                     const std::vector<uint32_t> &indices,
                     bool use_accelerate = true);
-    float TraceRay(const glm::vec3 &origin,
+    [[nodiscard]] float TraceRay(const glm::vec3 &origin,
                     const glm::vec3 &direction,
                     float t_min,
                     HitRecord *hit_record) const override;
+    [[nodiscard]] float TraceRayImprove(const glm::vec3& origin,
+      const glm::vec3& direction,
+      float t_min,
+      float cur_t_min,
+      HitRecord* hit_record) const override;
     int GetNumFaces();
     void BuildAccelerationStructure(); // build bvh
     Bvh* GetBvh() const {
       return bvh_.get();
+    }
+    AxisAlignedBoundingBox GetBoundingBox() const {
+      return bvh_->GetRoot()->content->box;
     }
 
   private:

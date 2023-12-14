@@ -14,6 +14,6 @@ struct TaskInfo {
   uint32_t y;
   uint32_t width;
   uint32_t height;
-  uint32_t sample;
+  uint32_t sample; // Number of samples on this pixel
 };
 }  // namespace sparks

@@ -10,7 +10,7 @@
         <speed value="100"/>
     </camera>
 
-    <!--Light-->
+    <!--Light 0-->
     <model name="Light">
 		<!--<vertex position="546.0 548.7 10.0"/>
 		<vertex position="546.0 548.7 589.0"/>
@@ -42,7 +42,7 @@
         </material>
     </model>
 
-    <!--floor-->
+    <!--floor 1-->
     <model name="Floor">
         <vertex position="557.0 0.1   0.0"/>
         <vertex position="0.0 0.1   0.0"/>
@@ -60,7 +60,7 @@
         </material>
     </model>
 
-    <!--ceiling-->
+    <!--ceiling 2-->
     <model name="Ceiling">
         <vertex position="557.0 548.8 0.0  "/>
         <vertex position="557.0 548.8 560.0"/>
@@ -78,7 +78,7 @@
         </material>
     </model>
 
-    <!--back wall-->
+    <!--back wall 3-->
     <model name="Back Wall">
         <vertex position="557.0   0.0 559.8"/>
         <vertex position="0.0   0.0 559.8"/>
@@ -96,7 +96,7 @@
         </material>
     </model>
 
-    <!--right wall-->
+    <!--right wall 4-->
     <model name="Right Wall">
         <vertex position="0.1   0.0 560.0 "/>
         <vertex position="0.1   0.0   0.0"/>
@@ -115,7 +115,7 @@
         </material>
     </model>
 
-    <!--left wall-->
+    <!--left wall 5-->
     <model name="Left Wall">
         <vertex position="556.8   0.0   0.0 "/>
         <vertex position="556.8   0.0 560.0"/>
@@ -134,6 +134,7 @@
         </material>
     </model>
 
+    <!-- bunny 6 -->
     <model type="obj" name="Bunny">
         <filename value="../../meshes/bunny.obj"/>
         <transform type="world">
@@ -147,6 +148,7 @@
         </material>
     </model>
 
+    <!-- lucy 7 -->
     <model type="obj" name="Lucy">
         <filename value="../../meshes/lucy.obj"/>
         <transform type="world">

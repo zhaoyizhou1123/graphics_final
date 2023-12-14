@@ -118,5 +118,13 @@ class Scene {
   float camera_speed_{3.0f};
   glm::vec3 camera_pitch_yaw_roll_{0.0f, 0.0f, 0.0f};
   Camera camera_{};
+
+  /*@brief Preprocess the order of entities before ray tracing
+  * @return a list of entity indices that need to test, and indicates the order to test
+  */
+  std::vector<int> RayTracingPreSort_(const glm::vec3& origin,
+                                      const glm::vec3& direction,
+                                      float t_min,
+                                      float t_max) const;
 };
 }  // namespace sparks

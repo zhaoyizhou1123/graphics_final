@@ -15,6 +15,14 @@ class Model {
                                        const glm::vec3 &direction,
                                        float t_min,
                                        HitRecord *hit_record) const = 0;
+
+  //@param cur_t_min, the nearest distance found. <0 for non-existent.
+  [[nodiscard]] virtual float TraceRayImprove(const glm::vec3& origin,
+    const glm::vec3& direction,
+    float t_min,
+    float cur_t_min,
+    HitRecord* hit_record) const = 0;
+
   [[nodiscard]] virtual AxisAlignedBoundingBox GetAABB(
       const glm::mat4 &transform) const = 0;
   [[nodiscard]] virtual std::vector<Vertex> GetVertices() const = 0;
