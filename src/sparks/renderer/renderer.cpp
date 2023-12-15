@@ -215,11 +215,7 @@ void Renderer::RayGeneration(int x,
   glm::vec3 origin, direction;
 
   scene_.GetCamera().GenerateRay(
-      float(width_) / float(height_), range_low, range_high, origin, direction,
-      std::uniform_real_distribution<float>(0.0f, 1.0f)(rd),
-      std::uniform_real_distribution<float>(0.0f, 1.0f)(rd),
-      std::uniform_real_distribution<float>(0.0f, 1.0f)(rd),
-      std::uniform_real_distribution<float>(0.0f, 1.0f)(rd));
+      float(width_) / float(height_), range_low, range_high, origin, direction, rd);
   auto camera_to_world = scene_.GetCameraToWorld();
   origin = camera_to_world * glm::vec4(origin, 1.0f);
   direction = camera_to_world * glm::vec4(direction, 0.0f);

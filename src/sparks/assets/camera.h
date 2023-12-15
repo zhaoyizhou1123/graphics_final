@@ -1,5 +1,6 @@
 #pragma once
 #include "glm/glm.hpp"
+#include <random>
 
 namespace sparks {
 class Camera {
@@ -10,11 +11,10 @@ class Camera {
                                               float t_max) const;
 
   /**
-  * @brief Generate a ray acording to pixel 
-  * 
-  * @param rand_u, rand_v: For position sampling
-  * @param rand_w: For angle sampling
-  * @param rand_r: For calculating origin radius
+  * @brief Generate a ray acording to pixel, in camera world. 
+  * The true origin and direction should be transformed to world space
+  * @param range_low, range_high: The range on the image to sample. Both in [0,1]
+  * @param rng: random number generator
   * @param origin: The resulting origin sampled on the lens (in camera space, will be converted to world space later)
   * @param direction: The direction from origin to object
   */
@@ -23,10 +23,7 @@ class Camera {
                    glm::vec2 range_high,
                    glm::vec3 &origin,
                    glm::vec3 &direction,
-                   float rand_u = 0.0f,
-                   float rand_v = 0.0f,
-                   float rand_w = 0.0f,
-                   float rand_r = 0.0f) const;
+                   std::mt19937& rng) const;
   bool ImGuiItems();
   void UpdateFov(float delta);
   [[nodiscard]] float GetFov() const {
@@ -46,9 +43,13 @@ class Camera {
   }
 
  private:
-  float fov_{60.0f};
-  float aperture_{0.0f};
-  float focal_length_{3.0f};
+  float fov_{60.0f}; // in degree
+  float aperture_{0.0f}; // radius of lens
+  /* Not focus of camera. 
+  * It is the distance between plane of focus (not focal plane) to lens(camera).
+  * That is, rays emitting from plane of focus will converge to the camera sensor (image).
+  */
+  float focal_length_{3.0f};  
   float clamp_{100.0f};
   float gamma_{2.2f};
 };

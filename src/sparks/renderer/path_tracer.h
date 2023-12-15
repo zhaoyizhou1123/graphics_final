@@ -52,7 +52,7 @@ class PathTracer {
   * @param dir_out, the out direction
   * @param seed: Only used as seed for sampling.
   */
-  [[nodiscard]] glm::vec3 Shade_(HitRecord hit_record, const glm::vec3& dir_out);
+  [[nodiscard]] glm::vec3 Shade_(const HitRecord& hit_record, const glm::vec3& dir_out);
   /* @brief Compute light for diffuse material
   * @param p, position on diffuse material 
   * @param dir_out, normalized and points outward, we collect color observed from that direction

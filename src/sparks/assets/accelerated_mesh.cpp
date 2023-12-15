@@ -315,6 +315,7 @@ float AcceleratedMesh::TraceRayLeaf_(const std::vector<int>& face_indices, const
             glm::to_string(geometry_normal),
             glm::to_string(v0.normal));
         }
+        // Sometimes the triangle is not represented in standord form (normal outwards), so we discuss two cases
         if (glm::dot(geometry_normal, direction) < 0.0f) {
           hit_record->position = position;
           hit_record->geometry_normal = geometry_normal;

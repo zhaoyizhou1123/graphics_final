@@ -72,14 +72,15 @@ glm::vec3 PathTracer::SampleRayPathTrace(glm::vec3 origin,
   // Find intersection
   auto t = scene_->TraceRay(origin, direction, 1e-3f, 1e4f, &hit_record);
   if (t <= 0.0f) { // No intersection
-    return glm::vec3{scene_->SampleEnvmap(direction)}; // Check this
+    //return glm::vec3{scene_->SampleEnvmap(direction)}; // Check this
+    return glm::vec3{ 0.0f };
   }
   // Has intersection
   auto shade_p = hit_record.position; // The position to shade
   glm::vec3 shade_dir = -direction; // The direction to shade
 
   // Test whether the intersection is light source
-  auto material =
+  auto& material =
       scene_->GetEntity(hit_record.hit_entity_id).GetMaterial(); // The hit object is stored in hit_record
 
   auto normal = hit_record.normal;
@@ -87,16 +88,16 @@ glm::vec3 PathTracer::SampleRayPathTrace(glm::vec3 origin,
   //    return material->emission * material->emission_strength;
     
   // Not light source
-  glm::vec3 color = Shade_(hit_record, shade_dir);
   return Shade_(hit_record, shade_dir);
   //return glm::vec3{};
 }
 
-glm::vec3 PathTracer::Shade_(HitRecord hit_record, const glm::vec3& dir_out){
+glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_out){
   const Material& material = scene_->GetEntity(hit_record.hit_entity_id).GetMaterial(); // material
   glm::vec3 p = hit_record.position; // position to shade
-  //LAND_INFO("Current bounce count {}", bounce_cnt_);
+  //LAND_INFO("Bounce {}; position {}; in direction {}", bounce_cnt_, glm::to_string(p), glm::to_string(-dir_out) );
   if (material.material_type == MATERIAL_TYPE_EMISSION) { // emission
+    //LAND_INFO("Material emission");
     // We may consider diffuse/specular light in principled BSDF
     glm::vec3 color = ShadeEmission_(
       dir_out,
@@ -115,6 +116,7 @@ glm::vec3 PathTracer::Shade_(HitRecord hit_record, const glm::vec3& dir_out){
     return color;
   } 
   else if (material.material_type == MATERIAL_TYPE_LAMBERTIAN) { // diffuse
+    //LAND_INFO("Material diffuse");
     return ShadeDiffuse_(
       p,
       dir_out,
@@ -123,6 +125,7 @@ glm::vec3 PathTracer::Shade_(HitRecord hit_record, const glm::vec3& dir_out){
     );
   }
   else if (material.material_type == MATERIAL_TYPE_SPECULAR) { // specular
+    //LAND_INFO("Material specular");
     return ShadeSpecular_(
       p,
       dir_out,
@@ -148,9 +151,6 @@ glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out
 {
   if (glm::abs(glm::length(normal) - 1.0f) > 1e-3f) { // Check if normalized
     throw "Unnormalized normal!";
-  }
-  if (bounce_cnt_ >= render_settings_->num_bounces) { // reach bounce limit
-    return albedo_color * scene_->GetEnvmapMinorColor();
   }
   // Compute direct light
   glm::vec3 radiance_dir{ 0.0f };
@@ -180,21 +180,26 @@ glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out
   // TODO: Complete indirect light
   glm::vec3 radiance_indir{ 0.0f };
   float sample_prob = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng_);
-  if (sample_prob < render_settings_->prob_rr) { // passed russian roulette
-    glm::vec3 ray_in_reverse = hemisphere_sample(normal, rng_); // Sampled incident ray, but pointing outward
+  if (bounce_cnt_ < render_settings_->num_bounces 
+      && sample_prob < render_settings_->prob_rr) 
+  { // Bounce count did not reach limit and passed russian roulette
+    float pdf;
+    glm::vec3 ray_in_reverse = hemisphere_sample_cosine_weighted(normal, rng_, &pdf); // Sampled incident ray, but pointing outward
     HitRecord hit_record_ind;
     float dist = scene_->TraceRay(p, ray_in_reverse, 1e-3f, 1e4f, &hit_record_ind);
     if (dist > 0.0f) { // hit
-      auto hit_material = scene_->GetEntity(hit_record_ind.hit_entity_id).GetMaterial();
+      const Material& hit_material = scene_->GetEntity(hit_record_ind.hit_entity_id).GetMaterial();
       if (hit_material.material_type != MATERIAL_TYPE_EMISSION) { // not emission
         bounce_cnt_++;
         glm::vec3 color = Shade_(hit_record_ind, -ray_in_reverse);
-        radiance_indir = color * albedo_color * glm::dot(normal, ray_in_reverse) * 2.0f * render_settings_->prob_rr;
+        radiance_indir = color * (albedo_color * INV_PI) 
+          * glm::dot(normal, ray_in_reverse) / pdf / render_settings_->prob_rr;
       }
     }
   }
   // Need ambient light?
-  glm::vec3 ambient_color = albedo_color * scene_->GetEnvmapMinorColor();
+  //glm::vec3 ambient_color = albedo_color * scene_->GetEnvmapMinorColor();
+  glm::vec3 ambient_color{ 0.0f };
   //LAND_INFO("Direct light {}, indirect light {}, ambient light {}", 
   //  glm::to_string(radiance_dir), 
   //  glm::to_string(radiance_indir), 
@@ -215,8 +220,14 @@ glm::vec3 PathTracer::ShadeSpecular_(const glm::vec3& p, const glm::vec3& dir_ou
   if (glm::abs(glm::length(dir_out) - 1.0f) > 1e-3f) {
     throw "Unnormalized out ray!";
   }
-  if (bounce_cnt_ >= render_settings_->num_bounces) { // reach bounce limit
-    return albedo_color * scene_->GetEnvmapMinorColor();
+  // If just reach limit, allow the ray to bounce back once, so it can get diffuse light or direct light
+  if (bounce_cnt_ >= render_settings_->num_bounces + 1) {
+    //LAND_WARN("Too many bounces {}", bounce_cnt_);
+    //return albedo_color * scene_->GetEnvmapMinorColor();
+    return glm::vec3{ 0.0f };
+  }
+  if (glm::dot(dir_out, normal) < 0.0f) {
+    LAND_ERROR("Normal direction incorrect! Normal {}, out ray {}", glm::to_string(normal), glm::to_string(dir_out));
   }
   glm::vec3 dir_in_reverse = glm::reflect(-dir_out, normal); // the reverse direction of incident light
   HitRecord hit_record_ind;
@@ -224,6 +235,10 @@ glm::vec3 PathTracer::ShadeSpecular_(const glm::vec3& p, const glm::vec3& dir_ou
   if (dist > 0.0f) { // hit
     bounce_cnt_++;
     return albedo_color * Shade_(hit_record_ind, -dir_in_reverse);
+  }
+  else {
+    //return albedo_color * scene_->GetEnvmapMinorColor();
+    return glm::vec3{ 0.0f };
   }
 }
 }  // namespace sparks

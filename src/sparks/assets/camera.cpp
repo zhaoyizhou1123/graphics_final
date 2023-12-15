@@ -3,6 +3,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "imgui.h"
 #include "sparks/util/util.h"
+#include "sparks/util/sample.h"
 
 namespace sparks {
 
@@ -37,20 +38,28 @@ void Camera::GenerateRay(float aspect,
                          glm::vec2 range_high,
                          glm::vec3 &origin,
                          glm::vec3 &direction,
-                         float rand_u,
-                         float rand_v,
-                         float rand_w,
-                         float rand_r) const {
+                         std::mt19937& rng) const {
+  // sample pixel on image
+  float rand_u = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+  float rand_v = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
   auto pos = (range_high - range_low) * glm::vec2{rand_u, rand_v} + range_low;
-  pos = pos * 2.0f - 1.0f;
+  pos = pos * 2.0f - 1.0f; // convert to rane [-1,1]
   pos.y *= -1.0f;
-  origin = glm::vec3{0.0f};
+
   auto tan_fov = std::tan(glm::radians(fov_ * 0.5f));
-  float theta = 2.0f * PI * rand_w; // direction angle
-  float sin_theta = std::sin(theta);
-  float cos_theta = std::cos(theta);
-  origin =
-      glm::vec3{glm::vec2{sin_theta, cos_theta} * rand_r * aperture_, 0.0f}; // Why 0? Why camera position can change?
+
+  // sample origin on lens
+  //origin = glm::vec3{0.0f};
+  //float theta = 2.0f * PI * rand_w; // direction angle
+  //float sin_theta = std::sin(theta);
+  //float cos_theta = std::cos(theta);
+  //origin =
+  //    glm::vec3{glm::vec2{sin_theta, cos_theta} * rand_r * aperture_, 0.0f}; // z-axis of lens is 0 in camera space
+
+  const glm::vec2& disk_point = disk_sample(rng) * aperture_;
+  origin = glm::vec3{ disk_point, 0.0f };
+
+  // Transform the sampled pixel to plane of focus
   direction = glm::normalize(
       glm::vec3{tan_fov * aspect * pos.x, tan_fov * pos.y, -1.0f} *
           focal_length_ -

@@ -35,5 +35,44 @@ glm::vec3 normal2world(const glm::vec3 & normal, const glm::vec3 & p)
 	glm::mat3 rotate = { m,l,normal };
 	return rotate * p;
 }
+
+// Based on https://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/2D_Sampling_with_Multidimensional_Transformations#ConcentricSampleDisk
+glm::vec3 hemisphere_sample_cosine_weighted(const glm::vec3& normal, std::mt19937& rng, float* pdf)
+{
+	// Sample on standard unit hemisphere (normal = (0,0,1))
+	glm::vec2 u = disk_sample(rng);
+	float z = std::sqrt(std::max(0.0f, 1 - u.x * u.x - u.y * u.y));
+
+	glm::vec3 p_std = glm::vec3{ u.x, u.y, z };
+
+	// Compute pdf
+	*pdf = z * INV_PI; // cos_theta = z
+	
+	// Convert to true hemisphere defined by normal
+	return normal2world(normal, p_std);
 }
+
+// Based on https://www.pbr-book.org/3ed-2018/Monte_Carlo_Integration/2D_Sampling_with_Multidimensional_Transformations#ConcentricSampleDisk
+glm::vec2 disk_sample(std::mt19937& rng)
+{
+	// Uniform sampling in [-1,1]x[-1,1]
+	float x = std::uniform_real_distribution<float>(-1.0f, 1.0f)(rng);
+	float y = std::uniform_real_distribution<float>(-1.0f, 1.0f)(rng);
+
+	if (std::abs(x) < 1e-5 && std::abs(y) < 1e-5) {
+		return glm::vec2{ 0.0f };
+	}
+
+	float r, theta;
+	if (std::abs(x) > std::abs(y)) {
+		r = x;
+		theta = PI / 4 * (y / x);
+	}
+	else {
+		r = y;
+		theta = PI / 2 - PI / 4 * (x / y);
+	}
+	return glm::vec2{ r * std::cos(theta), r * std::sin(theta) };
+}
+} // namespace sparks
 
