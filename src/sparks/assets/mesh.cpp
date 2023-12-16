@@ -355,6 +355,7 @@ void Mesh::MergeVertices() {
   }
   vertices_ = vertices;
   indices_ = indices;
+  LAND_INFO("vertices size {}, indices size {}", vertices_.size(), indices_.size());
 }
 
 const char *Mesh::GetDefaultEntityName() {
@@ -440,6 +441,25 @@ Mesh::Mesh(const tinyxml2::XMLElement *element) {
       indices_.push_back(i + 2);
     }
     MergeVertices();
+  }
+}
+
+void Mesh::Check()
+{
+  for (int f = 0; f < indices_.size(); f += 3) { // iterate through all triangles
+    const auto& v0 = vertices_[indices_[f]];
+    const auto& v1 = vertices_[indices_[f + 1]];
+    const auto& v2 = vertices_[indices_[f + 2]];
+    auto geometry_normal = glm::normalize(
+      glm::cross(v1.position - v0.position, v2.position - v0.position)); // Respect the order
+    if (glm::dot(geometry_normal, v0.normal) < 0) { // opposite direction 
+      LAND_ERROR("Opposite direction at v0 {}, v1 {}, v2 {}: geometry {}, normal {}",
+        glm::to_string(v0.position),
+        glm::to_string(v1.position),
+        glm::to_string(v2.position),
+        glm::to_string(geometry_normal),
+        glm::to_string(v0.normal));
+    }
   }
 }
 

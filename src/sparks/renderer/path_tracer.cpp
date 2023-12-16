@@ -134,8 +134,14 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
     );
   }
   else if (material.material_type == MATERIAL_TYPE_TRANSMISSIVE) { // specular
-    LAND_ERROR("Not implemented!");
-    throw "Error occurs!";
+    return ShadeTransmissive_(
+      p,
+      dir_out,
+      hit_record.geometry_normal,
+      material.albedo_color,
+      material.ior,
+      hit_record.front_face
+    );
   }
   else if (material.material_type == MATERIAL_TYPE_PRINCIPLED) { // specular
     LAND_ERROR("Not implemented!");
@@ -152,6 +158,10 @@ glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out
   if (glm::abs(glm::length(normal) - 1.0f) > 1e-3f) { // Check if normalized
     throw "Unnormalized normal!";
   }
+  //if (glm::dot(dir_out, normal) < 0.0f) {
+  //  LAND_ERROR("Normal direction incorrect! Normal {}, out ray {}", glm::to_string(normal), glm::to_string(dir_out));
+  //}
+  //LAND_INFO("Normal correct at {}", glm::to_string(p));
   // Compute direct light
   glm::vec3 radiance_dir{ 0.0f };
   // Sample light source, seed choice is unimportant
@@ -239,6 +249,70 @@ glm::vec3 PathTracer::ShadeSpecular_(const glm::vec3& p, const glm::vec3& dir_ou
   else {
     //return albedo_color * scene_->GetEnvmapMinorColor();
     return glm::vec3{ 0.0f };
+  }
+}
+
+glm::vec3 PathTracer::ShadeTransmissive_(const glm::vec3& p, const glm::vec3& dir_out, const glm::vec3& normal, const glm::vec3& albedo_color, float ior, bool is_front)
+{
+  if (glm::abs(glm::length(normal) - 1.0f) > 1e-3f) {
+    throw "Unnormalized normal!";
+  }
+  if (glm::abs(glm::length(dir_out) - 1.0f) > 1e-3f) {
+    throw "Unnormalized out ray!";
+  }
+  // If just reach limit, allow the ray to bounce back once, so it can get diffuse light or direct light
+  if (bounce_cnt_ >= render_settings_->num_bounces + 1) {
+    return glm::vec3{ 0.0f };
+  }
+  if (glm::dot(dir_out, normal) < 0.0f) {
+    LAND_WARN("Bounce {}, normal direction incorrect! Normal {}, out ray {}, product {}", bounce_cnt_, glm::to_string(normal), glm::to_string(dir_out), glm::dot(dir_out, normal));
+  }
+  //LAND_INFO("Bounce {}, normal direction correct", bounce_cnt_);
+  glm::vec3 dir_in = -dir_out; // reverse light path
+  glm::vec3 dir_reflect = glm::reflect(dir_in, normal);
+
+  float ior_in_over_refract = 1.0f / ior; // eta_i / eta_t
+  if (!is_front) {
+    ior_in_over_refract = ior;
+  }
+  glm::vec3 dir_refract = glm::refract(dir_in, normal, ior_in_over_refract);
+
+  bool is_total_reflect = glm::length(dir_refract) < 1e-3f; // If total refract, dir_refract = (0,0,0)
+
+  // Compute fresnel;
+  float fr = 1.0f; // default: reflection only
+  if (!is_total_reflect) { // Refraction exists, calculate true fr
+    // Schlick¡¯s approximation
+    float cos_thetai = -glm::dot(dir_in, normal);
+    float r0 = (1 - ior) * (1 - ior) / (1 + ior) / (1 + ior); // fresnel term when thetai=0
+    fr = r0 + (1 - r0) * (1 - cos_thetai) * (1 - cos_thetai) * (1 - cos_thetai) * (1 - cos_thetai) * (1 - cos_thetai);
+  }
+
+  // Sample to determine reflection/refraction
+  float random_sample = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng_);
+  if (is_total_reflect || random_sample < fr) { // Reflect
+    HitRecord hit_record_ind;
+    float dist = scene_->TraceRay(p, dir_reflect, 1e-3f, 1e4f, &hit_record_ind);
+    if (dist > 0.0f) { // hit
+      bounce_cnt_++;
+      return albedo_color * Shade_(hit_record_ind, -dir_reflect);
+    }
+    else {
+      return glm::vec3{ 0.0f };
+    }
+  }
+  else { // Refract
+    // Compute refract light
+    glm::vec3 color_refract{ 0.0f };
+    HitRecord hit_record_refract;
+    float dist_refract = scene_->TraceRay(p, dir_refract, 1e-3f, 1e4f, &hit_record_refract);
+    if (dist_refract > 0.0f) { // hit
+      bounce_cnt_++;
+      return albedo_color * Shade_(hit_record_refract, -dir_refract);
+    }
+    else {
+      return glm::vec3{ 0.0f };
+    }
   }
 }
 }  // namespace sparks

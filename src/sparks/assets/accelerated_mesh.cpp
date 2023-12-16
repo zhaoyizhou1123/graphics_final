@@ -308,12 +308,14 @@ float AcceleratedMesh::TraceRayLeaf_(const std::vector<int>& face_indices, const
         auto geometry_normal = glm::normalize(
           glm::cross(v1.position - v0.position, v2.position - v0.position)); // Respect the order
         if (glm::dot(geometry_normal, v0.normal) < 0) { // opposite direction 
-          LAND_ERROR("Opposite direction at v0 {}, v1 {}, v2 {}: geometry {}, normal {}",
+          LAND_ERROR("Opposite direction at v0 {}, v1 {}, v2 {}: geometry {}, normal {}; origin {}, direction {}",
             glm::to_string(v0.position),
             glm::to_string(v1.position),
             glm::to_string(v2.position),
             glm::to_string(geometry_normal),
-            glm::to_string(v0.normal));
+            glm::to_string(v0.normal),
+            glm::to_string(origin),
+            glm::to_string(direction));
         }
         // Sometimes the triangle is not represented in standord form (normal outwards), so we discuss two cases
         if (glm::dot(geometry_normal, direction) < 0.0f) {

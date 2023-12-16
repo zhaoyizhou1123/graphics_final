@@ -55,6 +55,11 @@ Material::Material(Scene *scene, const tinyxml2::XMLElement *material_element)
     alpha = std::stof(child_element->FindAttribute("value")->Value());
   }
 
+  child_element = material_element->FirstChildElement("ior");
+  if (child_element) {
+    alpha = std::stof(child_element->FindAttribute("value")->Value());
+  }
+
   material_type =
       material_name_map[material_element->FindAttribute("type")->Value()];
 }
@@ -69,4 +74,36 @@ glm::vec3 Material::GetBrdf(
     const glm::vec3& ray_out) {
   return glm::vec3();
 }
+
+//float Material::GetReflectRefract(const glm::vec3& dir_in, const glm::vec3& normal, bool is_front, glm::vec3& dir_reflect, glm::vec3& dir_refract)
+//{
+//  if (glm::abs(glm::length(dir_in) - 1.0f) > 1e-3) {
+//    LAND_ERROR("Unnormalized in direction!");
+//  }
+//  if (glm::abs(glm::length(normal) - 1.0f) > 1e-3) {
+//    LAND_ERROR("Unnormalized normal!");
+//  }
+//  // Get true normal direction and theta_i
+//  glm::vec3 incident_normal = normal; // normal at incident direction
+//  float cos_thetai = glm::dot(dir_in, normal);
+//  if (cos_thetai < 0) { // incident_normal direction is correct, modify cos_thetai
+//    cos_thetai = -cos_thetai;
+//  }
+//  else { // reverse incident_normal direction
+//    incident_normal = -normal;
+//  }
+//  float square_sin_thetai = 1 - cos_thetai * cos_thetai;
+//
+//  // Get relection direction
+//  dir_reflect = glm::reflect(dir_in, normal);
+//
+//  // Get relative ior, in/refract
+//  float ior_in_over_refract = 1.0f / ior; // eta_i / eta_t
+//  if (!is_front) {
+//    ior_in_over_refract = ior;
+//  }
+//  float square_cos_thetat = 1 - ior_in_over_refract * ior_in_over_refract * square_sin_thetai;
+//
+//  if (square_cos_thetat)
+//}
 }  // namespace sparks

@@ -38,6 +38,8 @@ class Mesh : public Model {
   void WriteObjFile(const std::string &file_path) const;
   void MergeVertices();
 
+  void Check();
+
  protected:
   std::vector<Vertex> vertices_;
   // Each entry is an index of vertex. Length is 3f. Faces are (i0,i1,i2); (i3,i4,i5); .... .

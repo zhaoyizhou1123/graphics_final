@@ -15,12 +15,14 @@ enum MaterialType : int {
 
 class Scene;
 
-struct Material {
+class Material {
+public:
   glm::vec3 albedo_color{0.8f};
   int albedo_texture_id{0};
   glm::vec3 emission{0.0f};
   float emission_strength{1.0f};
   float alpha{1.0f};
+  float ior{ 1.0f }; // index of refraction, default 1 (air)
   MaterialType material_type{MATERIAL_TYPE_LAMBERTIAN};
   float reserve[2]{};
   Material() = default;
@@ -31,5 +33,28 @@ struct Material {
     const glm::vec3& pos,
     const glm::vec3& ray_in,
     const glm::vec3& ray_out);
+
+  /* Compute reflection and refaction light
+  * @param is_front: True if incident ray is in air, and want to enter the material
+  * @param normal: Not guaranteed to be in the correct direction.
+  * @return: fresnel term in [0,1]. If 1, total reflection, then refaction will be (0,0,0).
+  */
+  //float GetReflectRefract(
+  //  const glm::vec3& dir_in,
+  //  const glm::vec3& normal,
+  //  bool is_front,
+  //  glm::vec3& dir_reflect,
+  //  glm::vec3& dir_refract
+  //);
+private:
+  /* Compute refraction angle cos and sin.
+  * @param is_front: True if incident ray is in air, and want to enter the material
+  * @param normal: Not guaranteed to be in the correct direction.
+  * @return: True if refraction exists. If false, cos_thetat and sin_thetat are meaningless
+  */ 
+  bool GetTransAngle_(const glm::vec3& dir_in, const glm::vec3& normal, bool is_front,
+                      float* cos_thetat, float* sin_thetat);
+  float GetFresnel_(const glm::vec3& dir_in);
+  glm::vec3 GetRefractDir_(const glm::vec3& dir_in, const glm::vec3& normal, bool is_front);
 };
 }  // namespace sparks

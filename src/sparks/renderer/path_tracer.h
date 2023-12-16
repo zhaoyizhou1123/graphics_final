@@ -65,6 +65,13 @@ class PathTracer {
     const glm::vec3& dir_out,
     const glm::vec3& normal,
     const glm::vec3& albedo_color);
+  [[nodiscard]] glm::vec3 ShadeTransmissive_(
+    const glm::vec3& p,
+    const glm::vec3& dir_out,
+    const glm::vec3& normal,
+    const glm::vec3& albedo_color,
+    float ior, 
+    bool is_front);
   [[nodiscard]] glm::vec3 ShadeBsdf_(const glm::vec3& p, const glm::vec3& dir_out);
   // Only consider emission light
   [[nodiscard]] glm::vec3 ShadeEmission_( 
