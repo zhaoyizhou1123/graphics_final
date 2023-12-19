@@ -5,6 +5,7 @@ struct Material {
   vec3 emission;
   float emission_strength;
   float alpha;
+  float ior;
   uint material_type;
 };
 

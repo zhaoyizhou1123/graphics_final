@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scene>
+	<camera>
+		<transform type="lookat">
+			<eye value="278 273 -800"/>
+			<center value="278 273 0"/>
+			<up value="0.0 1.0 0.0"/>
+		</transform>
+		<fov value="40"/>
+		<speed value="100"/>
+	</camera>
+
+	<!--Light 0-->
+	<model name="Light">
+		<!--<vertex position="546.0 548.7 10.0"/>
+		<vertex position="546.0 548.7 589.0"/>
+		<vertex position="10.0 548.7 589.0"/>
+		<vertex position="10.0 548.7 10.0"/>-->
+		<vertex position="343.0 548.7 227.0"/>
+		<vertex position="343.0 548.7 332.0"/>
+		<vertex position="213.0 548.7 332.0"/>
+		<vertex position="213.0 548.7 227.0"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
+
+		<geometry type="plane">
+			<!--<x min="10.0" max="546.0"/>
+			<y min="548.7" max="548.7"/>
+			<z min="10.0" max="589.0"/>-->
+			<x min="213.0" max="343.0"/>
+			<y min="548.7" max="548.7"/>
+			<z min="227.0" max="332.0"/>
+		</geometry>
+
+		<material type="emission">
+			<emission value="1.0 1.0 1.0"/>
+			<emission_strength value="10.0"/>
+		</material>
+	</model>
+
+	<!--floor 1-->
+	<model name="Floor">
+		<vertex position="557.0 0.1   0.0"/>
+		<vertex position="0.0 0.1   0.0"/>
+		<vertex position="0.0 0.1 560.0"/>
+		<vertex position="557.0 0.1 560.0"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
+
+		<material type="lambertian">
+			<albedo value="0.8 0.8 0.8"/>
+		</material>
+	</model>
+
+	<!--ceiling 2-->
+	<model name="Ceiling">
+		<vertex position="557.0 548.8 0.0  "/>
+		<vertex position="557.0 548.8 560.0"/>
+		<vertex position="0.0 548.8 560.0"/>
+		<vertex position="0.0 548.8   0.0"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
+
+		<material type="lambertian">
+			<albedo value="0.8 0.8 0.8"/>
+		</material>
+	</model>
+
+	<!--back wall 3-->
+	<model name="Back Wall">
+		<vertex position="557.0   0.0 559.8"/>
+		<vertex position="0.0   0.0 559.8"/>
+		<vertex position="0.0 550.0 559.8"/>
+		<vertex position="557.0 550.0 559.8"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
+
+		<material type="lambertian">
+			<albedo value="0.8 0.8 0.8"/>
+		</material>
+	</model>
+
+	<!--right wall 4-->
+	<model name="Right Wall">
+		<vertex position="0.1   0.0 560.0 "/>
+		<vertex position="0.1   0.0   0.0"/>
+		<vertex position="0.1 550.0   0.0"/>
+		<vertex position="0.1 550.0 560.0"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
+
+		<material type="lambertian">
+			<albedo value="0.0 0.8 0.0"/>
+			<!--<albedo value="0.8 0.8 0.8"/>-->
+		</material>
+	</model>
+
+	<!--left wall 5-->
+	<model name="Left Wall">
+		<vertex position="556.8   0.0   0.0 "/>
+		<vertex position="556.8   0.0 560.0"/>
+		<vertex position="556.8 550.0 560.0"/>
+		<vertex position="556.8 550.0   0.0"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
+
+		<material type="lambertian">
+			<albedo value="0.8 0.0 0.0"/>
+			<!--<albedo value="0.8 0.8 0.8"/>-->
+		</material>
+	</model>
+
+	<!-- right dragon turbo 1-->
+	<model type="obj" name="Right Dragon">
+		<filename value="../../meshes/dragon.obj"/>
+		<transform type="world">
+			<scale value="100 100 100"/>
+			<translation value="102 71 174"/>
+			<rotation value="180 19 -157"/>
+		</transform>
+
+		<material type="lambertian">
+			<albedo value="1 1 1"/>
+		</material>
+	</model>
+
+	<!-- left dragon turbo 2-->
+	<model type="obj" name="Left Dragon">
+		<filename value="../../meshes/dragon.obj"/>
+		<transform type="world">
+			<scale value="100 100 100"/>
+			<translation value="360 180 440"/>
+			<rotation value="0 4 27"/>
+		</transform>
+
+		<material type="lambertian">
+			<albedo value="1 1 1"/>
+		</material>
+	</model>
+
+	<!-- sphere turbo 3-->
+	<model type="obj" name="ball">
+		<filename value="../../meshes/sphere.obj"/>
+		<transform type="world">
+			<scale value="25 25 25"/>
+			<translation value="226 170 131"/>
+		</transform>
+
+		<material type="lambertian">
+			<albedo value="1 1 1"/>
+		</material>
+	</model>
+
+	<!-- bunny-->
+	<model type="obj" name="bunny">
+		<filename value="../../meshes/bunny.obj"/>
+		<transform type="world">
+			<scale value="500 500 500"/>
+			<translation value="400 -16 100"/>
+			<rotation value="-179 14 -176"/>
+		</transform>
+
+		<material type="lambertian">
+			<albedo value="1 1 1"/>
+		</material>
+	</model>
+
+	<!-- Lantern-->
+	<model type="obj" name="Lantern">
+		<filename value="../../meshes/lantern.obj"/>
+		<transform type="world">
+			<scale value="50 50 50"/>
+			<translation value="250 450 531"/>
+		</transform>
+
+		<material type="lambertian">
+			<albedo value="1 1 1"/>
+		</material>
+	</model>
+
+</scene>

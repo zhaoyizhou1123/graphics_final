@@ -102,44 +102,41 @@ void traverse(sparks::AcceleratedMesh::BvhNode* node, int& total_cnt) {
 
 void test_main() {
   //sparks::Mesh mesh;
-  //std::string file_path("../../meshes/bunny.obj");
+  //std::string file_path("../../meshes/sphere.obj");
   //bool success = sparks::Mesh::LoadObjFile(file_path, mesh);
   //if (!success) {
   //  LAND_ERROR("Load file failed!");
   //}
   //sparks::AcceleratedMesh acc_mesh(mesh);
-  //auto bvh = acc_mesh.GetBvh();
-  //if (bvh == nullptr) {
-  //  LAND_ERROR("Null bvh!");
-  //}
-  //auto root = bvh->GetRoot();
-  //if (root == nullptr) {
-  //  LAND_ERROR("Null root");
-  //}
-  //int cnt = 0;
-  //traverse(root, cnt);
+  //acc_mesh.Check();
+  //
+  //glm::vec3 origin{ -5.0f, -2.412321f, -3.841506f };
+  //glm::vec3 direction = glm::normalize(glm::vec3{ 0.687533, 0.392439, 0.610975 });
+
+  //sparks::HitRecord hit_record;
+  //float t = acc_mesh.TraceRayImprove(origin, direction, 1e-3, -1.0f, &hit_record);
+  //LAND_INFO("Distance {}", t);
 
   //LAND_INFO("Bvh has stored {} faces", cnt);
   // 
-  sparks::Scene scene("../../scenes/cornell_specular.xml");
+  sparks::Scene scene("../../scenes/cornell_specular_trans.xml");
 
-  glm::vec3 origin{ 250.0f, 250.0f, -80.0f };
-  glm::vec3 direction = glm::normalize(glm::vec3{ 0.2f, 1.0f, 1.0f });
-  //sparks::HitRecord hit_record;
-  //float t = scene.TraceRay(origin, direction, 1e-3, 1e4, &hit_record);
-  //LAND_INFO("t: {}", t);
-  sparks::RendererSettings renderer_setting;
-  sparks::PathTracer path_tracer(&renderer_setting, &scene);
-  std::string seed;
-  while (true) {
-    std::cout << "Input a seed, enter 's' to stop: ";
-    std::cin >> seed;
-    if (seed == "s") {
-      break;
-    }
-    path_tracer.SetSeed(std::stoi(seed));
-    glm::vec3 color = path_tracer.SampleRayPathTrace(origin, direction);
-    LAND_INFO("Seed {}, origin {}, direction {}, color {}", seed, glm::to_string(origin), glm::to_string(direction), glm::to_string(color));
-  }
-
+  glm::vec3 origin{ 200.0f, 208.0f, -10.0f };
+  glm::vec3 direction = glm::normalize(glm::vec3{ 0.1f, 0.1f, 1.0f });
+  sparks::HitRecord hit_record;
+  float t = scene.TraceRay(origin, direction, 1e-3, 1e4, &hit_record);
+  LAND_INFO("t: {}", t);
+  //sparks::RendererSettings renderer_setting;
+  //sparks::PathTracer path_tracer(&renderer_setting, &scene);
+  //std::string seed;
+  //while (true) {
+  //  std::cout << "Input a seed, enter 's' to stop: ";
+  //  std::cin >> seed;
+  //  if (seed == "s") {
+  //    break;
+  //  }
+  //  path_tracer.SetSeed(std::stoi(seed));
+  //  glm::vec3 color = path_tracer.SampleRayPathTrace(origin, direction);
+  //  LAND_INFO("Seed {}, origin {}, direction {}, color {}", seed, glm::to_string(origin), glm::to_string(direction), glm::to_string(color));
+  //}
 }

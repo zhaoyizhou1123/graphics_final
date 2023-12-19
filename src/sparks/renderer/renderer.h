@@ -74,11 +74,12 @@ class Renderer {
   void WorkerThread();
 
   RendererSettings renderer_settings_;
-  //Scene scene_{"../../scenes/cornell_lucy_bunny_v2.xml"}; // Default scene
+  Scene scene_{"../../scenes/custom.xml"}; // Default scene
   //Scene scene_{ "../../scenes/cornell_v2.xml" }; // Default scene
   //Scene scene_{ "../../scenes/cornell_specular.xml" }; // Default scene
   /*Scene scene_{ "../../scenes/cornell_lucy_bunny_trans.xml" };*/
-  Scene scene_{ "../../scenes/cornell_specular_trans.xml" };
+  //Scene scene_{ "../../scenes/cornell_specular_trans.xml" };
+  //Scene scene_{ "../../scenes/cornell_lucy_bunny_depth.xml" }; // Default scene
 
   /* CPU Renderer Assets */
   std::vector<glm::vec4> accumulation_color_;

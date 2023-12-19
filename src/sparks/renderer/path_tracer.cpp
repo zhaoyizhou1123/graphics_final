@@ -195,6 +195,8 @@ glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out
   { // Bounce count did not reach limit and passed russian roulette
     float pdf;
     glm::vec3 ray_in_reverse = hemisphere_sample_cosine_weighted(normal, rng_, &pdf); // Sampled incident ray, but pointing outward
+    //glm::vec3 ray_in_reverse = hemisphere_sample(normal, rng_);
+    //pdf = 0.5 * INV_PI;
     HitRecord hit_record_ind;
     float dist = scene_->TraceRay(p, ray_in_reverse, 1e-3f, 1e4f, &hit_record_ind);
     if (dist > 0.0f) { // hit
