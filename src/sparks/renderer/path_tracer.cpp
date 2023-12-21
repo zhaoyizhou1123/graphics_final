@@ -96,6 +96,10 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
   const Material& material = scene_->GetEntity(hit_record.hit_entity_id).GetMaterial(); // material
   glm::vec3 p = hit_record.position; // position to shade
   //LAND_INFO("Bounce {}; position {}; in direction {}", bounce_cnt_, glm::to_string(p), glm::to_string(-dir_out) );
+  // Get color according to texture
+  //LAND_INFO("Texture coord {}", glm::to_string(hit_record.tex_coord));
+  glm::vec3 hit_color = glm::vec3{ scene_->GetTextures()[material.albedo_texture_id].Sample(
+                hit_record.tex_coord) } * material.albedo_color;
   if (material.material_type == MATERIAL_TYPE_EMISSION) { // emission
     //LAND_INFO("Material emission");
     // We may consider diffuse/specular light in principled BSDF
@@ -120,7 +124,7 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
     return ShadeDiffuse_(
       p,
       dir_out,
-      material.albedo_color,
+      hit_color,
       hit_record.normal
     );
   }
@@ -130,7 +134,7 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
       p,
       dir_out,
       hit_record.normal,
-      material.albedo_color
+      hit_color
     );
   }
   else if (material.material_type == MATERIAL_TYPE_TRANSMISSIVE) { // specular
@@ -138,7 +142,7 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
       p,
       dir_out,
       hit_record.geometry_normal,
-      material.albedo_color,
+      hit_color,
       material.ior,
       hit_record.front_face
     );

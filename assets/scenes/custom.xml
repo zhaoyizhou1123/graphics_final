@@ -42,7 +42,7 @@
 		</material>
 	</model>
 
-	<!--floor 1-->
+	<!--floor 1--><!--
 	<model name="Floor">
 		<vertex position="557.0 0.1   0.0"/>
 		<vertex position="0.0 0.1   0.0"/>
@@ -60,7 +60,7 @@
 		</material>
 	</model>
 
-	<!--ceiling 2-->
+	--><!--ceiling 2--><!--
 	<model name="Ceiling">
 		<vertex position="557.0 548.8 0.0  "/>
 		<vertex position="557.0 548.8 560.0"/>
@@ -78,7 +78,7 @@
 		</material>
 	</model>
 
-	<!--back wall 3-->
+	--><!--back wall 3--><!--
 	<model name="Back Wall">
 		<vertex position="557.0   0.0 559.8"/>
 		<vertex position="0.0   0.0 559.8"/>
@@ -96,7 +96,7 @@
 		</material>
 	</model>
 
-	<!--right wall 4-->
+	--><!--right wall 4--><!--
 	<model name="Right Wall">
 		<vertex position="0.1   0.0 560.0 "/>
 		<vertex position="0.1   0.0   0.0"/>
@@ -111,11 +111,11 @@
 
 		<material type="lambertian">
 			<albedo value="0.0 0.8 0.0"/>
-			<!--<albedo value="0.8 0.8 0.8"/>-->
+			--><!--<albedo value="0.8 0.8 0.8"/>--><!--
 		</material>
 	</model>
 
-	<!--left wall 5-->
+	--><!--left wall 5--><!--
 	<model name="Left Wall">
 		<vertex position="556.8   0.0   0.0 "/>
 		<vertex position="556.8   0.0 560.0"/>
@@ -130,11 +130,11 @@
 
 		<material type="lambertian">
 			<albedo value="0.8 0.0 0.0"/>
-			<!--<albedo value="0.8 0.8 0.8"/>-->
+			--><!--<albedo value="0.8 0.8 0.8"/>--><!--
 		</material>
 	</model>
 
-	<!-- right dragon turbo 1-->
+	--><!-- right dragon turbo 1--><!--
 	<model type="obj" name="Right Dragon">
 		<filename value="../../meshes/dragon.obj"/>
 		<transform type="world">
@@ -148,7 +148,7 @@
 		</material>
 	</model>
 
-	<!-- left dragon turbo 2-->
+	--><!-- left dragon turbo 2--><!--
 	<model type="obj" name="Left Dragon">
 		<filename value="../../meshes/dragon.obj"/>
 		<transform type="world">
@@ -162,7 +162,7 @@
 		</material>
 	</model>
 
-	<!-- sphere turbo 3-->
+	--><!-- sphere turbo 3--><!--
 	<model type="obj" name="ball">
 		<filename value="../../meshes/sphere.obj"/>
 		<transform type="world">
@@ -173,11 +173,11 @@
 		<material type="lambertian">
 			<albedo value="1 1 1"/>
 		</material>
-	</model>
+	</model>-->
 
 	<!-- bunny-->
 	<model type="obj" name="bunny">
-		<filename value="../../meshes/bunny.obj"/>
+		<filename value="../../meshes/bunny_textured.obj"/>
 		<transform type="world">
 			<scale value="500 500 500"/>
 			<translation value="400 -16 100"/>
@@ -186,10 +186,11 @@
 
 		<material type="lambertian">
 			<albedo value="1 1 1"/>
+			<albedo_texture value="../../textures/bunny.jpg"/>
 		</material>
 	</model>
 
-	<!-- Lantern-->
+	<!-- Lantern--><!--
 	<model type="obj" name="Lantern">
 		<filename value="../../meshes/lantern.obj"/>
 		<transform type="world">
@@ -200,6 +201,6 @@
 		<material type="lambertian">
 			<albedo value="1 1 1"/>
 		</material>
-	</model>
+	</model>-->
 
 </scene>

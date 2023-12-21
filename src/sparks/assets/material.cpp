@@ -36,6 +36,7 @@ Material::Material(Scene *scene, const tinyxml2::XMLElement *material_element)
     if (Texture::Load(path, albedo_texture)) {
       albedo_texture_id =
           scene->AddTexture(albedo_texture, PathToFilename(path));
+      LAND_INFO("Loaded texture from {}", path);
     }
   }
 

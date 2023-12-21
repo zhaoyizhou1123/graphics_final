@@ -51,12 +51,20 @@ Mesh Mesh::Sphere(const glm::vec3 &center, float radius) {
         if (j == 2 * precision) {
           j1 = 0;
         }
+        //indices.push_back(i * (2 * precision + 1) + j1);
+        //indices.push_back(i * (2 * precision + 1) + j);
+        //indices.push_back(i_1 * (2 * precision + 1) + j);
+        //indices.push_back(i * (2 * precision + 1) + j1);
+        //indices.push_back(i_1 * (2 * precision + 1) + j);
+        //indices.push_back(i_1 * (2 * precision + 1) + j1);
         indices.push_back(i * (2 * precision + 1) + j1);
+        indices.push_back(i_1 * (2 * precision + 1) + j);
         indices.push_back(i * (2 * precision + 1) + j);
-        indices.push_back(i_1 * (2 * precision + 1) + j);
+
         indices.push_back(i * (2 * precision + 1) + j1);
-        indices.push_back(i_1 * (2 * precision + 1) + j);
         indices.push_back(i_1 * (2 * precision + 1) + j1);
+        indices.push_back(i_1 * (2 * precision + 1) + j);
+        
       }
     }
   }
@@ -251,7 +259,7 @@ bool Mesh::LoadObjFile(const std::string &obj_file_path, Mesh &mesh) {
     LAND_WARN("{}", reader.Warning());
   }
 
-  auto &attrib = reader.GetAttrib();
+  auto &attrib = reader.GetAttrib(); // Store v, vt, vn, etc.
   auto &shapes = reader.GetShapes();
   auto &materials = reader.GetMaterials();
 
