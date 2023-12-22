@@ -308,7 +308,7 @@ float AcceleratedMesh::TraceRayLeaf_(const std::vector<int>& face_indices, const
         auto geometry_normal = glm::normalize(
           glm::cross(v1.position - v0.position, v2.position - v0.position)); // Respect the order
         if (glm::dot(geometry_normal, v0.normal) < 0) { // opposite direction 
-          LAND_ERROR("Opposite direction at v0 {}, v1 {}, v2 {}: geometry {}, normal {}; origin {}, direction {}",
+          LAND_WARN("Opposite direction at v0 {}, v1 {}, v2 {}: geometry {}, normal {}; origin {}, direction {}",
             glm::to_string(v0.position),
             glm::to_string(v1.position),
             glm::to_string(v2.position),
@@ -322,8 +322,12 @@ float AcceleratedMesh::TraceRayLeaf_(const std::vector<int>& face_indices, const
           hit_record->position = position;
           hit_record->geometry_normal = geometry_normal;
           hit_record->normal = v0.normal * w + v1.normal * u + v2.normal * v;
-          hit_record->tangent =
-            v0.tangent * w + v1.tangent * u + v2.tangent * v;
+          //hit_record->tangent =
+          //  v0.tangent * w + v1.tangent * u + v2.tangent * v;
+          if (face_idx < 0 || face_idx >= face_tangents_.size()) {
+            LAND_ERROR("Face idx {} out of range [0,{})!", face_idx, face_tangents_.size());
+          }
+          hit_record->tangent = face_tangents_[face_idx];
           hit_record->tex_coord =
             v0.tex_coord * w + v1.tex_coord * u + v2.tex_coord * v;
           hit_record->front_face = true;
@@ -332,8 +336,12 @@ float AcceleratedMesh::TraceRayLeaf_(const std::vector<int>& face_indices, const
           hit_record->position = position;
           hit_record->geometry_normal = -geometry_normal;
           hit_record->normal = -(v0.normal * w + v1.normal * u + v2.normal * v);
-          hit_record->tangent =
-            -(v0.tangent * w + v1.tangent * u + v2.tangent * v);
+          //hit_record->tangent =
+          //  -(v0.tangent * w + v1.tangent * u + v2.tangent * v);
+          if (face_idx < 0 || face_idx >= face_tangents_.size()) {
+            LAND_ERROR("Face idx {} out of range [0,{}]!", face_idx, face_tangents_.size() - 1);
+          }
+          hit_record->tangent = -face_tangents_[face_idx];
           hit_record->tex_coord =
             v0.tex_coord * w + v1.tex_coord * u + v2.tex_coord * v;
           hit_record->front_face = false;

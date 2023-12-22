@@ -7,6 +7,7 @@ struct Material {
   float alpha;
   float ior;
   uint material_type;
+  int normal_texture_id;
 };
 
 #define MATERIAL_TYPE_LAMBERTIAN 0

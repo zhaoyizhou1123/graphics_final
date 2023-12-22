@@ -390,6 +390,7 @@ Scene::Scene(const std::string& filename) : Scene() {
     }
     else if (element_type == "model") {
       Mesh mesh = Mesh(child_element);
+      //LAND_INFO("Builded mesh");
       Material material{};
 
       auto grandchild_element = child_element->FirstChildElement("material");
@@ -425,6 +426,7 @@ Scene::Scene(const std::string& filename) : Scene() {
           AddEntity(
             std::move(std::make_unique<AcceleratedMesh>(mesh)), material, transformation,
             std::string(name_attribute->Value()));
+          //LAND_INFO("Added entity {}", std::string(name_attribute->Value()));
         }
         else {
           AddEntity(

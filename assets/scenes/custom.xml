@@ -38,11 +38,11 @@
 
 		<material type="emission">
 			<emission value="1.0 1.0 1.0"/>
-			<emission_strength value="10.0"/>
+			<emission_strength value="30.0"/>
 		</material>
 	</model>
 
-	<!--floor 1--><!--
+	<!--floor 1-->
 	<model name="Floor">
 		<vertex position="557.0 0.1   0.0"/>
 		<vertex position="0.0 0.1   0.0"/>
@@ -60,7 +60,7 @@
 		</material>
 	</model>
 
-	--><!--ceiling 2--><!--
+	ceiling 2
 	<model name="Ceiling">
 		<vertex position="557.0 548.8 0.0  "/>
 		<vertex position="557.0 548.8 560.0"/>
@@ -78,12 +78,12 @@
 		</material>
 	</model>
 
-	--><!--back wall 3--><!--
+	<!--back wall 3-->
 	<model name="Back Wall">
-		<vertex position="557.0   0.0 559.8"/>
-		<vertex position="0.0   0.0 559.8"/>
-		<vertex position="0.0 550.0 559.8"/>
-		<vertex position="557.0 550.0 559.8"/>
+		<vertex position="557.0   0.0 559.8" tex_coord="1.0 0.0"/>
+		<vertex position="0.0   0.0 559.8" tex_coord="0.0 0.0"/>
+		<vertex position="0.0 550.0 559.8" tex_coord="0.0 1.0"/>
+		<vertex position="557.0 550.0 559.8" tex_coord="1.0 1.0"/>
 		<index value="0"/>
 		<index value="1"/>
 		<index value="3"/>
@@ -93,10 +93,12 @@
 
 		<material type="lambertian">
 			<albedo value="0.8 0.8 0.8"/>
+			<albedo_texture value="../../textures/brick_color.jpg"/>
+			<normal_texture value="../../textures/brick_normal.jpg"/>
 		</material>
 	</model>
 
-	--><!--right wall 4--><!--
+	<!--right wall 4-->
 	<model name="Right Wall">
 		<vertex position="0.1   0.0 560.0 "/>
 		<vertex position="0.1   0.0   0.0"/>
@@ -111,11 +113,11 @@
 
 		<material type="lambertian">
 			<albedo value="0.0 0.8 0.0"/>
-			--><!--<albedo value="0.8 0.8 0.8"/>--><!--
+			<albedo value="0.8 0.8 0.8"/>
 		</material>
 	</model>
 
-	--><!--left wall 5--><!--
+	<!--left wall 5-->
 	<model name="Left Wall">
 		<vertex position="556.8   0.0   0.0 "/>
 		<vertex position="556.8   0.0 560.0"/>
@@ -130,11 +132,11 @@
 
 		<material type="lambertian">
 			<albedo value="0.8 0.0 0.0"/>
-			--><!--<albedo value="0.8 0.8 0.8"/>--><!--
+			<albedo value="0.8 0.8 0.8"/>
 		</material>
 	</model>
 
-	--><!-- right dragon turbo 1--><!--
+	 <!--right dragon 1-->
 	<model type="obj" name="Right Dragon">
 		<filename value="../../meshes/dragon.obj"/>
 		<transform type="world">
@@ -148,7 +150,7 @@
 		</material>
 	</model>
 
-	--><!-- left dragon turbo 2--><!--
+	 <!--left dragon 2-->
 	<model type="obj" name="Left Dragon">
 		<filename value="../../meshes/dragon.obj"/>
 		<transform type="world">
@@ -162,7 +164,7 @@
 		</material>
 	</model>
 
-	--><!-- sphere turbo 3--><!--
+	 <!--sphere turbo 3-->
 	<model type="obj" name="ball">
 		<filename value="../../meshes/sphere.obj"/>
 		<transform type="world">
@@ -173,7 +175,7 @@
 		<material type="lambertian">
 			<albedo value="1 1 1"/>
 		</material>
-	</model>-->
+	</model>
 
 	<!-- bunny-->
 	<model type="obj" name="bunny">
@@ -190,16 +192,18 @@
 		</material>
 	</model>
 
-	<!-- Lantern--><!--
-	<model type="obj" name="Lantern">
-		<filename value="../../meshes/lantern.obj"/>
+	 <!--Lantern--><!--
+	<model type="sphere" name="Lantern">
+		<center value="0.0 0.0 0.0"/>
+		<radius value="50"/>
 		<transform type="world">
-			<scale value="50 50 50"/>
 			<translation value="250 450 531"/>
 		</transform>
 
 		<material type="lambertian">
 			<albedo value="1 1 1"/>
+			<albedo_texture value="../../textures/lantern_color.jpg"/>
+			<normal_texture value="../../textures/lantern_normal.jpg"/>
 		</material>
 	</model>-->
 

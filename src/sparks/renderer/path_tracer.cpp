@@ -67,10 +67,12 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
 
 glm::vec3 PathTracer::SampleRayPathTrace(glm::vec3 origin,
                                          glm::vec3 direction){
+  //LAND_INFO("Path trace starts {}, {}", glm::to_string(origin), glm::to_string(direction));
   bounce_cnt_ = 0; // clear bounce_cnt_
   HitRecord hit_record;
   // Find intersection
   auto t = scene_->TraceRay(origin, direction, 1e-3f, 1e4f, &hit_record);
+  //LAND_INFO("Finished ray tracing");
   if (t <= 0.0f) { // No intersection
     //return glm::vec3{scene_->SampleEnvmap(direction)}; // Check this
     return glm::vec3{ 0.0f };
@@ -83,7 +85,7 @@ glm::vec3 PathTracer::SampleRayPathTrace(glm::vec3 origin,
   auto& material =
       scene_->GetEntity(hit_record.hit_entity_id).GetMaterial(); // The hit object is stored in hit_record
 
-  auto normal = hit_record.normal;
+  //auto normal = hit_record.normal;
   //if (material->material_type == MATERIAL_TYPE_EMISSION) { // light source, return directly
   //    return material->emission * material->emission_strength;
     
@@ -100,12 +102,36 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
   //LAND_INFO("Texture coord {}", glm::to_string(hit_record.tex_coord));
   glm::vec3 hit_color = glm::vec3{ scene_->GetTextures()[material.albedo_texture_id].Sample(
                 hit_record.tex_coord) } * material.albedo_color;
+  glm::vec3 normal;
+  //LAND_INFO("normal texture id {}", material.normal_texture_id);
+  if (material.normal_texture_id == 1) { // default normal
+    normal = hit_record.normal; // normal or geometry normal?
+  }
+  else {
+    auto& tangent_space_normal = glm::vec3{ scene_->GetTextures()[material.normal_texture_id].Sample(
+                hit_record.tex_coord) };
+    //LAND_INFO("Normal texture id {}. Get tangent space normal {}", material.normal_texture_id, glm::to_string(tangent_space_normal));
+    tangent_space_normal = tangent_space_normal * 2.0f - 1.0f; // convert to [-1,1]
+    //LAND_INFO("Tangent space normal {}", glm::to_string(tangent_space_normal));
+    // Compute TBN in model space
+    if (glm::length(hit_record.tangent) < 1e-5) {
+      LAND_ERROR("Hit record tangent is 0!");
+    }
+    auto& bitangent = glm::cross(hit_record.normal, hit_record.tangent);
+    glm::mat3 TBN{ hit_record.tangent, bitangent, hit_record.normal };
+    //LAND_INFO("Get TBN matrix {}", glm::to_string(TBN));
+    normal = glm::normalize(TBN * tangent_space_normal);
+    if (glm::dot(normal, hit_record.normal) < 0) { // Correct direction
+      normal = -normal;
+    }
+   
+  }
   if (material.material_type == MATERIAL_TYPE_EMISSION) { // emission
     //LAND_INFO("Material emission");
     // We may consider diffuse/specular light in principled BSDF
     glm::vec3 color = ShadeEmission_(
       dir_out,
-      hit_record.normal,
+      normal,
       material.emission,
       material.emission_strength);
     //if (glm::any(glm::lessThan(color, glm::vec3{ 0.0f }))) {
@@ -125,7 +151,7 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
       p,
       dir_out,
       hit_color,
-      hit_record.normal
+      normal
     );
   }
   else if (material.material_type == MATERIAL_TYPE_SPECULAR) { // specular
@@ -133,7 +159,7 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
     return ShadeSpecular_(
       p,
       dir_out,
-      hit_record.normal,
+      normal,
       hit_color
     );
   }
@@ -141,7 +167,7 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
     return ShadeTransmissive_(
       p,
       dir_out,
-      hit_record.geometry_normal,
+      normal,
       hit_color,
       material.ior,
       hit_record.front_face

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<scene>
+	<camera>
+		<transform type="lookat">
+			<eye value="0.0 1.0 -3.0"/>
+			<center value="0.0 0.0 0.0"/>
+			<up value="0.0 1.0 0.0"/>
+		</transform>
+	</camera>
+
+	<envmap type="file" value="../../textures/envmap_clouds_4k.hdr"/>
+
+	<!--Light 0-->
+	<model name="Light">
+		<vertex position="10.0 10.0 -10.0"/>
+		<vertex position="10.0 10.0 10.0"/>
+		<vertex position="-10.0 10.0 10.0"/>
+		<vertex position="-10.0 10.0 -10.0"/>
+		<!--<vertex position="343.0 548.7 227.0"/>
+		<vertex position="343.0 548.7 332.0"/>
+		<vertex position="213.0 548.7 332.0"/>
+		<vertex position="213.0 548.7 227.0"/>-->
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
+
+		<geometry type="plane">
+			<x min="-10.0" max="10.0"/>
+			<y min="10" max="10"/>
+			<z min="-10.0" max="10.0"/>
+			<!--<x min="213.0" max="343.0"/>
+			<y min="548.7" max="548.7"/>
+			<z min="227.0" max="332.0"/>-->
+		</geometry>
+
+		<material type="emission">
+			<emission value="1.0 1.0 1.0"/>
+			<emission_strength value="2.0"/>
+		</material>
+	</model>
+
+	<model type="obj" name="plane">
+		<filename value="../../meshes/plane.obj"/>
+
+		<material type="lambertian">
+			<albedo value="0.8 0.8 0.8"/>
+		</material>
+	</model>
+
+	<!--<model type="sphere" name="geometry sphere">
+		<center value="0.0 0.0 0.0"/>
+		<radius value="0.5"/>
+
+		<transform type="translate" value="0.0 0.5 0.0"/>
+
+		<material type="lambertian">
+			<albedo value="1 1 1"/>
+			<albedo_texture value="../../textures/earth.jpg"/>
+		</material>
+	</model>-->
+
+	<!--<model type="obj" name="bunny">
+		<filename value="../../meshes/bunny_textured.obj"/>
+
+		--><!--<transform type="world">
+			<translate value="0.0 0.5 0.0"/>
+			<scale value="0.5 0.5 0.5"/>
+		</transform>--><!--
+
+		<material type="lambertian">
+			<albedo value="1 1 1"/>
+			<albedo_texture value="../../textures/bunny.jpg"/>
+		</material>
+	</model>-->
+
+	<!--Lantern-->
+	<model type="sphere" name="Lantern">
+		<center value="0.0 0.0 0.0"/>
+		<radius value="0.5"/>
+		<u_freq value="4.0"/>
+		<v_freq value="2.0"/>
+		<transform type="world">
+			<translation value="0 0.5 0"/>
+		</transform>
+
+		<material type="lambertian">
+			<albedo value="1 1 1"/>
+			<albedo_texture value="../../textures/lantern_color.jpg"/>
+			<normal_texture value="../../textures/lantern_normal.jpg"/>
+		</material>
+	</model>
+
+</scene>

@@ -24,7 +24,9 @@ public:
   float alpha{1.0f};
   float ior{ 1.0f }; // index of refraction, default 1 (air)
   MaterialType material_type{MATERIAL_TYPE_LAMBERTIAN};
-  float reserve[1]{};
+  //int height_texture_id{ 1 };
+  //float reserve[1]{};
+  int normal_texture_id{ 1 };
   Material() = default;
   explicit Material(const glm::vec3 &albedo);
   Material(Scene *scene, const tinyxml2::XMLElement *material_element);

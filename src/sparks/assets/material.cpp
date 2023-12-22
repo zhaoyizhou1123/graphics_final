@@ -40,6 +40,28 @@ Material::Material(Scene *scene, const tinyxml2::XMLElement *material_element)
     }
   }
 
+  child_element = material_element->FirstChildElement("normal_texture");
+  if (child_element) {
+    std::string path = child_element->FindAttribute("value")->Value();
+    Texture normal_texture(1, 1);
+    if (Texture::Load(path, normal_texture)) {
+      normal_texture_id =
+        scene->AddTexture(normal_texture, PathToFilename(path));
+      LAND_INFO("Loaded normal texture from {}", path);
+    }
+  }
+
+  //child_element = material_element->FirstChildElement("height_texture");
+  //if (child_element) {
+  //  std::string path = child_element->FindAttribute("value")->Value();
+  //  Texture height_texture(1, 1);
+  //  if (Texture::Load(path, height_texture)) {
+  //    height_texture_id =
+  //      scene->AddTexture(height_texture, PathToFilename(path));
+  //    LAND_INFO("Loaded height texture from {}", path);
+  //  }
+  //}
+
   child_element = material_element->FirstChildElement("emission");
   if (child_element) {
     emission = StringToVec3(child_element->FindAttribute("value")->Value());

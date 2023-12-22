@@ -11,20 +11,31 @@
 
 namespace sparks {
 
-Mesh::Mesh(const Mesh &mesh) : Mesh(mesh.vertices_, mesh.indices_) {
+Mesh::Mesh(const Mesh &mesh) : Mesh(mesh.vertices_, mesh.indices_, mesh.face_tangents_) {
+}
+
+Mesh::Mesh(const std::vector<Vertex>& vertices,
+  const std::vector<uint32_t>& indices) {
+  vertices_ = vertices;
+  indices_ = indices;
 }
 
 Mesh::Mesh(const std::vector<Vertex> &vertices,
-           const std::vector<uint32_t> &indices) {
+           const std::vector<uint32_t> &indices,
+           const std::vector<glm::vec3>& face_tangents) {
   vertices_ = vertices;
   indices_ = indices;
+  face_tangents_ = face_tangents;
 }
 
 Mesh Mesh::Cube(const glm::vec3 &center, const glm::vec3 &size) {
   return {{}, {}};
 }
 
-Mesh Mesh::Sphere(const glm::vec3 &center, float radius) {
+Mesh Mesh::Sphere(const glm::vec3 &center, float radius, float u_freq, float v_freq) {
+  if (u_freq < 1 || v_freq < 1) {
+    LAND_ERROR("u,v frequencies should be at least 1, got {} and {}", u_freq, v_freq);
+  }
   std::vector<Vertex> vertices;
   std::vector<uint32_t> indices;
   auto pi = glm::radians(180.0f);
@@ -43,12 +54,14 @@ Mesh Mesh::Sphere(const glm::vec3 &center, float radius) {
     for (int j = 0; j <= 2 * precision; j++) {
       auto normal = glm::vec3{circle[j].x * sin_theta, cos_theta,
                               circle[j].y * sin_theta};
+      float tex_coord_u_raw = float(j) * inv_precision * 0.5f * u_freq;
+      float tex_coord_v_raw = float(i) * inv_precision * v_freq;
       vertices.push_back(
           Vertex(normal * radius + center, normal,
-                 {float(j) * inv_precision * 0.5f, float(i) * inv_precision}));
+                 {tex_coord_u_raw - glm::floor(tex_coord_u_raw), tex_coord_v_raw - glm::floor(tex_coord_v_raw)}));
       if (i) {
         int j1 = j + 1;
-        if (j == 2 * precision) {
+        if (j == 2 * precision) { // This is a very small triangle
           j1 = 0;
         }
         //indices.push_back(i * (2 * precision + 1) + j1);
@@ -339,6 +352,8 @@ bool Mesh::LoadObjFile(const std::string &obj_file_path, Mesh &mesh) {
     }
   }
   mesh = Mesh(vertices, indices);
+  //LAND_INFO("Builded mesh from obj");
+  mesh.ComputeFaceTangents();
   mesh.MergeVertices();
   return true;
 }
@@ -363,7 +378,6 @@ void Mesh::MergeVertices() {
   }
   vertices_ = vertices;
   indices_ = indices;
-  LAND_INFO("vertices size {}, indices size {}", vertices_.size(), indices_.size());
 }
 
 const char *Mesh::GetDefaultEntityName() {
@@ -380,6 +394,8 @@ Mesh::Mesh(const tinyxml2::XMLElement *element) {
   if (mesh_type == "sphere") {
     glm::vec3 center{0.0f};
     float radius{1.0f};
+    float u_freq{ 1.0f };
+    float v_freq{ 1.0f };
 
     auto child_element = element->FirstChildElement("center");
     if (child_element) {
@@ -391,7 +407,18 @@ Mesh::Mesh(const tinyxml2::XMLElement *element) {
       radius = std::stof(child_element->FindAttribute("value")->Value());
     }
 
-    *this = Mesh::Sphere(center, radius);
+    child_element = element->FirstChildElement("u_freq");
+    if (child_element) {
+      u_freq = std::stof(child_element->FindAttribute("value")->Value());
+    }
+
+    child_element = element->FirstChildElement("v_freq");
+    if (child_element) {
+      v_freq = std::stof(child_element->FindAttribute("value")->Value());
+    }
+
+    *this = Mesh::Sphere(center, radius, u_freq, v_freq);
+    ComputeFaceTangents();
   } else if (mesh_type == "obj") {
     Mesh::LoadObjFile(
         element->FirstChildElement("filename")->FindAttribute("value")->Value(),
@@ -448,8 +475,10 @@ Mesh::Mesh(const tinyxml2::XMLElement *element) {
       indices_.push_back(i + 1);
       indices_.push_back(i + 2);
     }
+    ComputeFaceTangents();
     MergeVertices();
   }
+  LAND_INFO("vertices size {}, indices size {}, tangents size {}", vertices_.size(), indices_.size(), face_tangents_.size());
 }
 
 void Mesh::Check()
@@ -469,6 +498,53 @@ void Mesh::Check()
         glm::to_string(v0.normal));
     }
   }
+}
+
+// based on https://learnopengl.com/Advanced-Lighting/Normal-Mapping
+void Mesh::ComputeFaceTangents()
+{
+  std::vector<glm::vec3> face_tangents(int(indices_.size() / 3));
+  for (int f = 0; f < indices_.size(); f += 3) {
+    const auto& v0 = vertices_[indices_[f]];
+    const auto& v1 = vertices_[indices_[f + 1]];
+    const auto& v2 = vertices_[indices_[f + 2]];
+    const auto& tex_coord0 = v0.tex_coord;
+    const auto& tex_coord1 = v1.tex_coord;
+    const auto& tex_coord2 = v2.tex_coord;
+    if (glm::all(glm::equal(tex_coord0, glm::vec2{})) 
+      && glm::all(glm::equal(tex_coord1, glm::vec2{})) 
+      && glm::all(glm::equal(tex_coord2, glm::vec2{}))) { // no texture coord, return
+      break;
+    }
+    else {
+      const auto& edge1 = v1.position - v0.position;
+      const auto& edge2 = v2.position - v0.position;
+      const auto& delta_uv_1 = tex_coord1 - tex_coord0;
+      const auto& delta_uv_2 = tex_coord2 - tex_coord0;
+      float determinant = (delta_uv_1.x * delta_uv_2.y - delta_uv_1.y * delta_uv_2.x);
+      //if (glm::abs(determinant) < 1e-5) {
+      //  LAND_WARN("Determinant 0! {}, {}, {}", glm::to_string(tex_coord0), glm::to_string(tex_coord1), glm::to_string(tex_coord2));
+      //}
+      //float f = 1.0f / determinant;
+      auto& tangent = glm::vec3{
+        delta_uv_2.y * edge1.x - delta_uv_1.y * edge2.x,
+        delta_uv_2.y * edge1.y - delta_uv_1.y * edge2.y,
+        delta_uv_2.y * edge1.z - delta_uv_1.y * edge2.z
+      };  
+      //if (glm::length(tangent) < 1e-9) {
+      //  LAND_ERROR("Tangent {} near 0. v0 {}, v1 {}, v2 {}. Face idx {}", glm::to_string(tangent),
+      //    glm::to_string(v0.position), glm::to_string(v1.position), glm::to_string(v2.position),
+      //    int(f/3));
+      //}
+      
+      // If tangent is 0, just let it be 0.
+      tangent = glm::normalize(tangent);
+      face_tangents[int(f / 3)] = tangent;
+    }
+  }
+  face_tangents_ = face_tangents;
+  //LAND_INFO("Complete face tangents compute");
+  return;
 }
 
 }  // namespace sparks

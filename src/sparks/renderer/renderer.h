@@ -80,6 +80,7 @@ class Renderer {
   /*Scene scene_{ "../../scenes/cornell_lucy_bunny_trans.xml" };*/
   //Scene scene_{ "../../scenes/cornell_specular_trans.xml" };
   //Scene scene_{ "../../scenes/cornell_lucy_bunny_depth.xml" }; // Default scene
+  //Scene scene_{ "../../scenes/base_v2.xml" };
 
   /* CPU Renderer Assets */
   std::vector<glm::vec4> accumulation_color_;
