@@ -1,13 +1,19 @@
 
 struct Material {
-  vec3 albedo_color;
   int albedo_texture_id;
+  int normal_texture_id;
+  uint material_type;
+  vec3 albedo_color;
+  float metallic;
+  float ior;
+  float roughness;
+  float spec_trans;
+  bool thin;
+  float flatness;
+  float diff_trans;
   vec3 emission;
   float emission_strength;
   float alpha;
-  float ior;
-  uint material_type;
-  int normal_texture_id;
 };
 
 #define MATERIAL_TYPE_LAMBERTIAN 0

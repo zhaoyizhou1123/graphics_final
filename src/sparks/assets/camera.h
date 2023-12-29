@@ -6,6 +6,7 @@ namespace sparks {
 class Camera {
  public:
   Camera(float fov = 60.0f, float aperture = 0.0f, float focal_length = 3.0f);
+  Camera(float shutter, float fov, float aperture, float focal_length);
   [[nodiscard]] glm::mat4 GetProjectionMatrix(float aspect,
                                               float t_min,
                                               float t_max) const;
@@ -24,6 +25,14 @@ class Camera {
                    glm::vec3 &origin,
                    glm::vec3 &direction,
                    std::mt19937& rng) const;
+  // Also sample the timestep and record in t (for motion blur)
+  void GenerateRay(float aspect,
+    glm::vec2 range_low,
+    glm::vec2 range_high,
+    glm::vec3& origin,
+    glm::vec3& direction,
+    float* t,
+    std::mt19937& rng) const;
   bool ImGuiItems();
   void UpdateFov(float delta);
   [[nodiscard]] float GetFov() const {
@@ -42,6 +51,10 @@ class Camera {
     return gamma_;
   }
 
+  [[nodiscard]] float GetShutter() const {
+    return shutter_;
+  }
+
  private:
   float fov_{60.0f}; // in degree
   float aperture_{0.0f}; // radius of lens
@@ -52,5 +65,6 @@ class Camera {
   float focal_length_{3.0f};  
   float clamp_{100.0f};
   float gamma_{2.2f};
+  float shutter_{ 0.0f }; // shutter time
 };
 }  // namespace sparks

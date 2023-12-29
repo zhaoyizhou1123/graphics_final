@@ -17,24 +17,44 @@ class Scene;
 
 class Material {
 public:
+  int albedo_texture_id{ 0 };
+  int normal_texture_id{ 1 };
+  MaterialType material_type{ MATERIAL_TYPE_LAMBERTIAN };
+  float padding1{0.0f};
+  // Principled BSDF parameters
   glm::vec3 albedo_color{0.8f};
-  int albedo_texture_id{0};
+  float metallic{ 0.0f };
+  float ior{ 1.0f }; // index of refraction, default 1 (air)
+  float roughness{ 0.0f };
+  float spec_trans{ 0.0f };
+  bool thin{ true };
+  bool padding2[3]{};
+  float flatness{ 0.0f };
+  float diff_trans{ 0.0f }; // 0: all diffuse is reflected -> 1, transmitted
+  float padding3[2]{};
+
   glm::vec3 emission{0.0f};
   float emission_strength{1.0f};
   float alpha{1.0f};
-  float ior{ 1.0f }; // index of refraction, default 1 (air)
-  MaterialType material_type{MATERIAL_TYPE_LAMBERTIAN};
   //int height_texture_id{ 1 };
-  //float reserve[1]{};
-  int normal_texture_id{ 1 };
+  float padding4[3]{};
+
   Material() = default;
   explicit Material(const glm::vec3 &albedo);
   Material(Scene *scene, const tinyxml2::XMLElement *material_element);
 
-  glm::vec3 GetBrdf(
+  // Return pdf
+  float GetBsdf(
     const glm::vec3& pos,
     const glm::vec3& ray_in,
-    const glm::vec3& ray_out);
+    const glm::vec3& ray_out) const;
+
+  // Sample ray_in given ray_out and record pdf
+  void SampleRayIn(
+    const glm::vec3& pos,
+    glm::vec3* ray_in,
+    const glm::vec3& ray_out,
+    float* pdf) const;
 
   /* Compute reflection and refaction light
   * @param is_front: True if incident ray is in air, and want to enter the material

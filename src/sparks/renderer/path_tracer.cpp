@@ -30,8 +30,9 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
   HitRecord hit_record;
   const int max_bounce = render_settings_->num_bounces;
   std::mt19937 rd(sample ^ x ^ y);
+  float time = 0.0f;
   for (int i = 0; i < max_bounce; i++) {
-    auto t = scene_->TraceRay(origin, direction, 1e-3f, 1e4f, &hit_record);
+    auto t = scene_->TraceRay(origin, direction, time, 1e-3f, 1e4f, &hit_record);
     if (t > 0.0f) {
       LAND_INFO("Get Intersection with distance {}", t);
       auto &material =
@@ -52,7 +53,7 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
         radiance += throughput * scene_->GetEnvmapMinorColor();
         throughput *=
             std::max(glm::dot(direction, hit_record.normal), 0.0f) * 2.0f;
-        if (scene_->TraceRay(origin, direction, 1e-3f, 1e4f, nullptr) < 0.0f) {
+        if (scene_->TraceRay(origin, direction, time, 1e-3f, 1e4f, nullptr) < 0.0f) {
           radiance += throughput * scene_->GetEnvmapMajorColor();
         }
         break;
@@ -66,12 +67,14 @@ glm::vec3 PathTracer::SampleRay(glm::vec3 origin,
 }
 
 glm::vec3 PathTracer::SampleRayPathTrace(glm::vec3 origin,
-                                         glm::vec3 direction){
+                                         glm::vec3 direction,
+                                         float time){
   //LAND_INFO("Path trace starts {}, {}", glm::to_string(origin), glm::to_string(direction));
   bounce_cnt_ = 0; // clear bounce_cnt_
   HitRecord hit_record;
   // Find intersection
-  auto t = scene_->TraceRay(origin, direction, 1e-3f, 1e4f, &hit_record);
+  auto t = scene_->TraceRay(origin, direction, time, 1e-3f, 1e4f, &hit_record);
+  //auto t = scene_->TraceRay(origin, direction, 1e-3f, 1e4f, &hit_record);
   //LAND_INFO("Finished ray tracing");
   if (t <= 0.0f) { // No intersection
     //return glm::vec3{scene_->SampleEnvmap(direction)}; // Check this
@@ -90,11 +93,11 @@ glm::vec3 PathTracer::SampleRayPathTrace(glm::vec3 origin,
   //    return material->emission * material->emission_strength;
     
   // Not light source
-  return Shade_(hit_record, shade_dir);
+  return Shade_(hit_record, shade_dir, time);
   //return glm::vec3{};
 }
 
-glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_out){
+glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_out, float time){
   const Material& material = scene_->GetEntity(hit_record.hit_entity_id).GetMaterial(); // material
   glm::vec3 p = hit_record.position; // position to shade
   //LAND_INFO("Bounce {}; position {}; in direction {}", bounce_cnt_, glm::to_string(p), glm::to_string(-dir_out) );
@@ -134,6 +137,7 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
       normal,
       material.emission,
       material.emission_strength);
+    //LAND_INFO("Get emission light {}", glm::to_string(color));
     //if (glm::any(glm::lessThan(color, glm::vec3{ 0.0f }))) {
     //  LAND_INFO("Is front face {}", hit_record.front_face);
     //  LAND_INFO("Geometry normal {}", glm::to_string(hit_record.geometry_normal));
@@ -151,7 +155,8 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
       p,
       dir_out,
       hit_color,
-      normal
+      normal,
+      time
     );
   }
   else if (material.material_type == MATERIAL_TYPE_SPECULAR) { // specular
@@ -160,7 +165,8 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
       p,
       dir_out,
       normal,
-      hit_color
+      hit_color,
+      time
     );
   }
   else if (material.material_type == MATERIAL_TYPE_TRANSMISSIVE) { // specular
@@ -170,7 +176,8 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
       normal,
       hit_color,
       material.ior,
-      hit_record.front_face
+      hit_record.front_face,
+      time
     );
   }
   else if (material.material_type == MATERIAL_TYPE_PRINCIPLED) { // specular
@@ -183,7 +190,7 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
   }
 }
 
-glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out, const glm::vec3& albedo_color, const glm::vec3& normal)
+glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out, const glm::vec3& albedo_color, const glm::vec3& normal, float time)
 {
   if (glm::abs(glm::length(normal) - 1.0f) > 1e-3f) { // Check if normalized
     throw "Unnormalized normal!";
@@ -202,7 +209,8 @@ glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out
   // Test blocking to sampled light source
   HitRecord hit_record;
   glm::vec3 ray = sample_light_pos - p; // ray to light
-  scene_->TraceRay(p, glm::normalize(ray), 1e-3f, 1e4f, &hit_record);
+  //scene_->TraceRay(p, glm::normalize(ray), 1e-3f, 1e4f, &hit_record);
+  scene_->TraceRay(p, glm::normalize(ray), time, 1e-3f, 1e4f, &hit_record);
   auto hit_normal = hit_record.normal; // normal of intersection
   if (glm::abs(glm::length(hit_normal) - 1.0f) > 1e-3f) { // Check if normalized
     throw "Unnormalized normal!";
@@ -228,12 +236,13 @@ glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out
     //glm::vec3 ray_in_reverse = hemisphere_sample(normal, rng_);
     //pdf = 0.5 * INV_PI;
     HitRecord hit_record_ind;
-    float dist = scene_->TraceRay(p, ray_in_reverse, 1e-3f, 1e4f, &hit_record_ind);
+    //float dist = scene_->TraceRay(p, ray_in_reverse, 1e-3f, 1e4f, &hit_record_ind);
+    float dist = scene_->TraceRay(p, ray_in_reverse, time, 1e-3f, 1e4f, &hit_record_ind);
     if (dist > 0.0f) { // hit
       const Material& hit_material = scene_->GetEntity(hit_record_ind.hit_entity_id).GetMaterial();
       if (hit_material.material_type != MATERIAL_TYPE_EMISSION) { // not emission
         bounce_cnt_++;
-        glm::vec3 color = Shade_(hit_record_ind, -ray_in_reverse);
+        glm::vec3 color = Shade_(hit_record_ind, -ray_in_reverse, time);
         radiance_indir = color * (albedo_color * INV_PI) 
           * glm::dot(normal, ray_in_reverse) / pdf / render_settings_->prob_rr;
       }
@@ -254,7 +263,7 @@ glm::vec3 PathTracer::ShadeEmission_(const glm::vec3& dir_out, const glm::vec3& 
   return emission * emission_strength * glm::dot(glm::normalize(dir_out), glm::normalize(normal));
 }
 
-glm::vec3 PathTracer::ShadeSpecular_(const glm::vec3& p, const glm::vec3& dir_out, const glm::vec3& normal, const glm::vec3& albedo_color)
+glm::vec3 PathTracer::ShadeSpecular_(const glm::vec3& p, const glm::vec3& dir_out, const glm::vec3& normal, const glm::vec3& albedo_color, float time)
 {
   if (glm::abs(glm::length(normal) - 1.0f) > 1e-3f) {
     throw "Unnormalized normal!";
@@ -273,10 +282,10 @@ glm::vec3 PathTracer::ShadeSpecular_(const glm::vec3& p, const glm::vec3& dir_ou
   }
   glm::vec3 dir_in_reverse = glm::reflect(-dir_out, normal); // the reverse direction of incident light
   HitRecord hit_record_ind;
-  float dist = scene_->TraceRay(p, dir_in_reverse, 1e-3f, 1e4f, &hit_record_ind);
+  float dist = scene_->TraceRay(p, dir_in_reverse, time, 1e-3f, 1e4f, &hit_record_ind);
   if (dist > 0.0f) { // hit
     bounce_cnt_++;
-    return albedo_color * Shade_(hit_record_ind, -dir_in_reverse);
+    return albedo_color * Shade_(hit_record_ind, -dir_in_reverse, time);
   }
   else {
     //return albedo_color * scene_->GetEnvmapMinorColor();
@@ -284,7 +293,7 @@ glm::vec3 PathTracer::ShadeSpecular_(const glm::vec3& p, const glm::vec3& dir_ou
   }
 }
 
-glm::vec3 PathTracer::ShadeTransmissive_(const glm::vec3& p, const glm::vec3& dir_out, const glm::vec3& normal, const glm::vec3& albedo_color, float ior, bool is_front)
+glm::vec3 PathTracer::ShadeTransmissive_(const glm::vec3& p, const glm::vec3& dir_out, const glm::vec3& normal, const glm::vec3& albedo_color, float ior, bool is_front, float time)
 {
   if (glm::abs(glm::length(normal) - 1.0f) > 1e-3f) {
     throw "Unnormalized normal!";
@@ -324,10 +333,10 @@ glm::vec3 PathTracer::ShadeTransmissive_(const glm::vec3& p, const glm::vec3& di
   float random_sample = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng_);
   if (is_total_reflect || random_sample < fr) { // Reflect
     HitRecord hit_record_ind;
-    float dist = scene_->TraceRay(p, dir_reflect, 1e-3f, 1e4f, &hit_record_ind);
+    float dist = scene_->TraceRay(p, dir_reflect, time, 1e-3f, 1e4f, &hit_record_ind);
     if (dist > 0.0f) { // hit
       bounce_cnt_++;
-      return albedo_color * Shade_(hit_record_ind, -dir_reflect);
+      return albedo_color * Shade_(hit_record_ind, -dir_reflect, time);
     }
     else {
       return glm::vec3{ 0.0f };
@@ -337,10 +346,10 @@ glm::vec3 PathTracer::ShadeTransmissive_(const glm::vec3& p, const glm::vec3& di
     // Compute refract light
     glm::vec3 color_refract{ 0.0f };
     HitRecord hit_record_refract;
-    float dist_refract = scene_->TraceRay(p, dir_refract, 1e-3f, 1e4f, &hit_record_refract);
+    float dist_refract = scene_->TraceRay(p, dir_refract, time, 1e-3f, 1e4f, &hit_record_refract);
     if (dist_refract > 0.0f) { // hit
       bounce_cnt_++;
-      return albedo_color * Shade_(hit_record_refract, -dir_refract);
+      return albedo_color * Shade_(hit_record_refract, -dir_refract, time);
     }
     else {
       return glm::vec3{ 0.0f };

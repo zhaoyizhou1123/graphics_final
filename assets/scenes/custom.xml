@@ -7,7 +7,7 @@
 			<up value="0.0 1.0 0.0"/>
 		</transform>
 		<fov value="40"/>
-		<speed value="100"/>
+		<shutter value="10"/>
 	</camera>
 
 	<!--Light 0-->
@@ -60,7 +60,7 @@
 		</material>
 	</model>
 
-	ceiling 2
+	<!--ceiling 2-->
 	<model name="Ceiling">
 		<vertex position="557.0 548.8 0.0  "/>
 		<vertex position="557.0 548.8 560.0"/>
@@ -185,6 +185,8 @@
 			<translation value="400 -16 100"/>
 			<rotation value="-179 14 -176"/>
 		</transform>
+
+		<speed value="1 0 0"/>
 
 		<material type="lambertian">
 			<albedo value="1 1 1"/>

@@ -71,13 +71,22 @@ class Scene {
   ;
   [[nodiscard]] glm::vec4 SampleEnvmap(const glm::vec3 &direction) const;
 
-  // @return t: The distance of intersection?
-  // @param: direction: Should be normalized.
+  /*@return t: The distance of intersection ?
+  * @param direction: Should be normalized.
+  * @param time: for motion blur
+  */ 
+
   float TraceRay(const glm::vec3 &origin,
                  const glm::vec3 &direction,
+                 float time,
                  float t_min,
                  float t_max,
                  HitRecord *hit_record) const;
+  float TraceRay(const glm::vec3& origin,
+    const glm::vec3& direction,
+    float t_min,
+    float t_max,
+    HitRecord* hit_record) const;
 
   /* @brief Sample a ray for path tracing.
   * @param pos, p
@@ -124,7 +133,12 @@ class Scene {
   */
   std::vector<int> RayTracingPreSort_(const glm::vec3& origin,
                                       const glm::vec3& direction,
+                                      float time,
                                       float t_min,
                                       float t_max) const;
+  std::vector<int> RayTracingPreSort_(const glm::vec3& origin,
+    const glm::vec3& direction,
+    float t_min,
+    float t_max) const;
 };
 }  // namespace sparks

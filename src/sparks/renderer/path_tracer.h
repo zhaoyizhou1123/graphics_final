@@ -34,7 +34,8 @@ class PathTracer {
   */
   [[nodiscard]] glm::vec3 SampleRayPathTrace(
     glm::vec3 origin,
-    glm::vec3 direction);
+    glm::vec3 direction,
+    float time);
 
   void SetSeed(int seed) {
     rng_.seed(seed);
@@ -52,26 +53,28 @@ class PathTracer {
   * @param dir_out, the out direction
   * @param seed: Only used as seed for sampling.
   */
-  [[nodiscard]] glm::vec3 Shade_(const HitRecord& hit_record, const glm::vec3& dir_out);
+  [[nodiscard]] glm::vec3 Shade_(const HitRecord& hit_record, const glm::vec3& dir_out, float time);
   /* @brief Compute light for diffuse material
   * @param p, position on diffuse material 
   * @param dir_out, normalized and points outward, we collect color observed from that direction
   * @param albedo_color, the base color
   * @param normal, the normal at p
   */
-  [[nodiscard]] glm::vec3 ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out, const glm::vec3& albedo_color, const glm::vec3& normal);
+  [[nodiscard]] glm::vec3 ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out, const glm::vec3& albedo_color, const glm::vec3& normal, float time);
   [[nodiscard]] glm::vec3 ShadeSpecular_(
     const glm::vec3& p,
     const glm::vec3& dir_out,
     const glm::vec3& normal,
-    const glm::vec3& albedo_color);
+    const glm::vec3& albedo_color,
+    float time);
   [[nodiscard]] glm::vec3 ShadeTransmissive_(
     const glm::vec3& p,
     const glm::vec3& dir_out,
     const glm::vec3& normal,
     const glm::vec3& albedo_color,
     float ior, 
-    bool is_front);
+    bool is_front,
+    float time);
   [[nodiscard]] glm::vec3 ShadeBsdf_(const glm::vec3& p, const glm::vec3& dir_out);
   // Only consider emission light
   [[nodiscard]] glm::vec3 ShadeEmission_( 

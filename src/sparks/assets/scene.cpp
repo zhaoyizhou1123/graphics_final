@@ -266,6 +266,75 @@ float Scene::TraceRay(const glm::vec3 &origin,
   return result;
 }
 
+float Scene::TraceRay(const glm::vec3& origin,
+  const glm::vec3& direction,
+  float time,
+  float t_min,
+  float t_max,
+  HitRecord* hit_record) const {
+  //// TODO: Consider motion blur in presort
+  //const std::vector<int>& entities_order_list = RayTracingPreSort_(
+  //  origin,
+  //  direction,
+  //  time,
+  //  t_min,
+  //  t_max);
+  const std::vector<int>& entities_order_list = RayTracingPreSort_(
+    origin,
+    direction,
+    time,
+    t_min,
+    t_max);
+  //LAND_INFO("Entity list size {}", entities_order_list.size());
+  float result = -1.0f;
+  HitRecord local_hit_record;
+  float local_result;
+  // Iterate through entities_order_list elements
+  for (auto itr = entities_order_list.begin(); itr != entities_order_list.end(); itr++) {
+    int entity_id = *itr; // current entity index
+    auto& entity = entities_[entity_id];
+    auto &transform = entity.GetTransformMatrix(time);
+    //auto& transform = entity.GetTransformMatrix();
+    //glm::mat4 transform = entity.GetTransformMatrix(0.0f);
+    auto inv_transform = glm::inverse(transform);
+    auto transformed_direction =
+      glm::vec3{ inv_transform * glm::vec4{direction, 0.0f} };
+    auto transformed_direction_length = glm::length(transformed_direction);
+    if (transformed_direction_length < 1e-6) {
+      continue;
+    }
+    // Improvement, use result in place of t_min, when a valid result already exists
+    local_result = entity.GetModel()->TraceRayImprove(
+      inv_transform * glm::vec4{ origin, 1.0f },
+      transformed_direction / transformed_direction_length, t_min * transformed_direction_length,
+      result * transformed_direction_length, hit_record ? &local_hit_record : nullptr);
+    local_result /= transformed_direction_length;
+    if (local_result > t_min && local_result < t_max &&
+      (result < 0.0f || local_result < result)) {
+      result = local_result;
+      if (hit_record) {
+        local_hit_record.position =
+          transform * glm::vec4{ local_hit_record.position, 1.0f };
+        local_hit_record.normal = glm::transpose(inv_transform) *
+          glm::vec4{ local_hit_record.normal, 0.0f };
+        local_hit_record.tangent =
+          transform * glm::vec4{ local_hit_record.tangent, 0.0f };
+        local_hit_record.geometry_normal =
+          glm::transpose(inv_transform) *
+          glm::vec4{ local_hit_record.geometry_normal, 0.0f };
+        *hit_record = local_hit_record;
+        hit_record->hit_entity_id = entity_id;
+      }
+    }
+  }
+  if (hit_record) {
+    hit_record->geometry_normal = glm::normalize(hit_record->geometry_normal);
+    hit_record->normal = glm::normalize(hit_record->normal);
+    hit_record->tangent = glm::normalize(hit_record->tangent);
+  }
+  return result;
+}
+
 glm::vec4 Scene::SampleEnvmap(const glm::vec3 &direction) const {
   float x = envmap_offset_;
   float y = acos(direction.y) * INV_PI;
@@ -367,6 +436,7 @@ Scene::Scene(const std::string& filename) : Scene() {
       float fov = 60.0f;
       float aperture = 0.0f;
       float focal_length = 3.0f;
+      float shutter = 0.0f;
       auto grandchild_element = child_element->FirstChildElement("fov");
       if (grandchild_element) {
         fov = std::stof(grandchild_element->FindAttribute("value")->Value());
@@ -386,12 +456,24 @@ Scene::Scene(const std::string& filename) : Scene() {
         focal_length =
           std::stof(grandchild_element->FindAttribute("value")->Value());
       }
-      camera_ = Camera(fov, aperture, focal_length);
+      grandchild_element = child_element->FirstChildElement("shutter");
+      if (grandchild_element) {
+        shutter =
+          std::stof(grandchild_element->FindAttribute("value")->Value());
+      }
+      camera_ = Camera(shutter, fov, aperture, focal_length);
+      LAND_INFO("Loaded camera");
     }
     else if (element_type == "model") {
       Mesh mesh = Mesh(child_element);
       //LAND_INFO("Builded mesh");
       Material material{};
+
+      glm::vec3 speed{ 0.0f };
+      auto speed_element = child_element->FirstChildElement("speed");
+      if (speed_element) {
+        speed = StringToVec3(speed_element->FindAttribute("value")->Value());
+      }
 
       auto grandchild_element = child_element->FirstChildElement("material");
       if (grandchild_element) {
@@ -425,12 +507,13 @@ Scene::Scene(const std::string& filename) : Scene() {
         if (name_attribute) {
           AddEntity(
             std::move(std::make_unique<AcceleratedMesh>(mesh)), material, transformation,
-            std::string(name_attribute->Value()));
+            std::string(name_attribute->Value()),
+            speed);
           //LAND_INFO("Added entity {}", std::string(name_attribute->Value()));
         }
         else {
           AddEntity(
-            std::move(std::make_unique<AcceleratedMesh>(mesh)), material, transformation);
+            std::move(std::make_unique<AcceleratedMesh>(mesh)), material, transformation, speed);
         }
       }
       else {
@@ -477,6 +560,67 @@ std::vector<int> Scene::RayTracingPreSort_(const glm::vec3& origin, const glm::v
     bool intersect = box.IsIntersect(
       origin_trans,
       transformed_direction / transformed_direction_length, 
+      t_min * transformed_direction_length, t_max * transformed_direction_length, &range_min, &range_max);
+    if (intersect) {
+      list_to_sort.emplace_back((range_min + range_max) / 2 / transformed_direction_length, i);
+    }
+    //intersect_list[i] = intersect;
+  }
+  auto compare = [this](const Ref& r1, const Ref& r2) -> bool {
+    return r1.ref_dist < r2.ref_dist;
+    };
+  std::sort(list_to_sort.begin(), list_to_sort.end(), compare);
+  std::vector<int> entities_order_list(list_to_sort.size());
+  for (int i = 0; i < list_to_sort.size(); i++) {
+    entities_order_list[i] = list_to_sort[i].entity_index;
+  }
+  //if (entities_order_list.size() == 1) {
+  //  LAND_WARN("list size 1 with origin {}, direction {}", glm::to_string(origin), glm::to_string(direction));
+  //}
+  //if (entities_order_list.empty()) {
+  //  LAND_ERROR("Empty list with origin {}, direction {}", glm::to_string(origin), glm::to_string(direction));
+  //}
+  //LAND_INFO("PreSort finishes with list size {}", entities_order_list.size());
+  //show_vector(entities_order_list);
+  return entities_order_list;
+}
+
+std::vector<int> Scene::RayTracingPreSort_(const glm::vec3& origin, const glm::vec3& direction, float time, float t_min, float t_max) const
+{
+  struct Ref {
+    Ref(float dist, int idx) : ref_dist{ dist }, entity_index{ idx } {}
+    float ref_dist;
+    int entity_index;
+  };
+  std::vector<Ref> list_to_sort;
+  list_to_sort.reserve(entities_.size());
+  //std::vector<bool> intersect_list(entities_.size());
+  for (int i = 0; i < entities_.size(); i++) {
+    auto& entity = entities_[i];
+    auto model = entity.GetModel();
+    // Transform direction according to entity property
+    auto& transform = entities_[i].GetTransformMatrix(time);
+    //auto& transform = entities_[i].GetTransformMatrix();
+    auto inv_transform = glm::inverse(transform);
+    auto transformed_direction =
+      glm::vec3{ inv_transform * glm::vec4{direction, 0.0f} };
+    auto transformed_direction_length = glm::length(transformed_direction);
+    if (transformed_direction_length < 1e-6) {
+      continue;
+    }
+    auto acc_mesh = dynamic_cast<const AcceleratedMesh*>(model);
+    if (acc_mesh == nullptr) {
+      LAND_ERROR("Some entities did not use accelerated mesh!");
+    }
+    const AxisAlignedBoundingBox& box = acc_mesh->GetBoundingBox();
+    glm::vec3 origin_trans = inv_transform * glm::vec4{ origin, 1.0f };
+    //box.ShowBox();
+    //LAND_INFO("Origin {}", glm::to_string(origin_trans));
+    //LAND_INFO("Transformed direction {}, length {}", glm::to_string(transformed_direction / transformed_direction_length), transformed_direction_length);
+    float range_min, range_max;
+    bool intersect = box.IsIntersect(
+      origin_trans,
+      transformed_direction / transformed_direction_length,
       t_min * transformed_direction_length, t_max * transformed_direction_length, &range_min, &range_max);
     if (intersect) {
       list_to_sort.emplace_back((range_min + range_max) / 2 / transformed_direction_length, i);

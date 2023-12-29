@@ -213,15 +213,18 @@ void Renderer::RayGeneration(int x,
   glm::vec2 range_high{(float(x) + 1.0f) / float(width_),
                        (float(y) + 1.0f) / float(height_)};
   glm::vec3 origin, direction;
-
+  float time;
   scene_.GetCamera().GenerateRay(
-      float(width_) / float(height_), range_low, range_high, origin, direction, rd);
+      float(width_) / float(height_), range_low, range_high, origin, direction, &time, rd);
+  //scene_.GetCamera().GenerateRay(
+  //  float(width_) / float(height_), range_low, range_high, origin, direction, rd);
   auto camera_to_world = scene_.GetCameraToWorld();
   origin = camera_to_world * glm::vec4(origin, 1.0f);
   direction = camera_to_world * glm::vec4(direction, 0.0f);
   //color_result = path_tracer.SampleRay(origin, direction, x, y, sample); // Get the color of a sample ray
   path_tracer.SetSeed(std::uniform_int_distribution<int>()(rd)); // set the random seed of path tracer
-  color_result = path_tracer.SampleRayPathTrace(origin, direction);
+  color_result = path_tracer.SampleRayPathTrace(origin, direction, time);
+  //color_result = path_tracer.SampleRayPathTrace(origin, direction, 0.0f);
   //if ((x % (width_ / 100) == 0) && (y % (height_ / 100) == 0)) {
   //  LAND_INFO("Pixel ({},{}), color {}", x, y, glm::to_string(color_result));
   //}

@@ -66,7 +66,19 @@ void Camera::GenerateRay(float aspect,
       origin);
 }
 
+void Camera::GenerateRay(float aspect, glm::vec2 range_low, glm::vec2 range_high, glm::vec3& origin, glm::vec3& direction, float* t, std::mt19937& rng) const
+{
+  // Sample origin and direction
+  GenerateRay(aspect, range_low, range_high, origin, direction, rng);
+  float rand_t = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng);
+  *t = rand_t * shutter_;
+}
+
 Camera::Camera(float fov, float aperture, float focal_length)
-    : fov_(fov), aperture_(aperture), focal_length_(focal_length) {
+    : fov_(fov), aperture_(aperture), focal_length_(focal_length), shutter_(0.0f) {
+}
+
+Camera::Camera(float shutter, float fov, float aperture, float focal_length)
+  : fov_(fov), aperture_(aperture), focal_length_(focal_length), shutter_(shutter) {
 }
 }  // namespace sparks

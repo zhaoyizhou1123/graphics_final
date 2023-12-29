@@ -91,11 +91,15 @@ Material::Material(const glm::vec3 &albedo) : Material() {
   albedo_color = albedo;
 }
 
-glm::vec3 Material::GetBrdf(
+float Material::GetBsdf(
     const glm::vec3& pos,
     const glm::vec3& ray_in,
-    const glm::vec3& ray_out) {
-  return glm::vec3();
+    const glm::vec3& ray_out) const {
+  return 0.0f;
+}
+
+void Material::SampleRayIn(const glm::vec3& pos, glm::vec3* ray_in, const glm::vec3& ray_out, float* pdf) const
+{
 }
 
 //float Material::GetReflectRefract(const glm::vec3& dir_in, const glm::vec3& normal, bool is_front, glm::vec3& dir_reflect, glm::vec3& dir_refract)
