@@ -129,6 +129,9 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
     }
    
   }
+  if (glm::abs(glm::length(normal) - 1.0f) > 1e-5f) {
+    LAND_ERROR("Unnormalized normal! {}", glm::to_string(normal));
+  }
   if (material.material_type == MATERIAL_TYPE_EMISSION) { // emission
     //LAND_INFO("Material emission");
     // We may consider diffuse/specular light in principled BSDF
@@ -169,7 +172,7 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
       time
     );
   }
-  else if (material.material_type == MATERIAL_TYPE_TRANSMISSIVE) { // specular
+  else if (material.material_type == MATERIAL_TYPE_TRANSMISSIVE) { // transmissive
     return ShadeTransmissive_(
       p,
       dir_out,
@@ -180,9 +183,8 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
       time
     );
   }
-  else if (material.material_type == MATERIAL_TYPE_PRINCIPLED) { // specular
-    LAND_ERROR("Not implemented!");
-    throw "Error occurs!";
+  else if (material.material_type == MATERIAL_TYPE_PRINCIPLED) { // principled bsdf
+    return ShadeBsdf_(p, dir_out, normal, material, hit_record.front_face, time);
   }
   else {
     LAND_ERROR("Unknown material type {}!", material.material_type);
@@ -219,6 +221,12 @@ glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out
    //  TODO: Complete direct light
     float cos_hit = glm::dot(normal, glm::normalize(ray));
     float cos_light = glm::dot(hit_normal, glm::normalize(-ray));
+    if (cos_hit < 0.0f) {
+      cos_hit = 0.0f;
+    }
+    if (cos_light < 0.0f) {
+      cos_light = 0.0f;
+    }
     float square_dist = glm::dot(ray, ray); // squared distance from p to light
     radiance_dir = sample_light->emission * sample_light->emission_strength
       * albedo_color * sparks::INV_PI
@@ -255,7 +263,11 @@ glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out
   //  glm::to_string(radiance_dir), 
   //  glm::to_string(radiance_indir), 
   //  glm::to_string(ambient_color));
-  return radiance_dir + radiance_indir + ambient_color;
+  glm::vec3 total_color = radiance_dir + radiance_indir + ambient_color;
+  if (glm::any(glm::lessThan(total_color, glm::vec3{ 0.0f }))) {
+    LAND_ERROR("Negative color {}", glm::to_string(total_color));
+  }
+  return total_color;
 }
 
 glm::vec3 PathTracer::ShadeEmission_(const glm::vec3& dir_out, const glm::vec3& normal, const glm::vec3& emission, float emission_strength) const
@@ -355,5 +367,154 @@ glm::vec3 PathTracer::ShadeTransmissive_(const glm::vec3& p, const glm::vec3& di
       return glm::vec3{ 0.0f };
     }
   }
+}
+
+// Based on https://github.com/mmp/pbrt-v3/
+glm::vec3 PathTracer::ShadeBsdf_(
+  const glm::vec3& p,
+  const glm::vec3& dir_out,
+  const glm::vec3& normal, 
+  const Material& material, 
+  bool is_front_face,
+  float time)
+{
+  glm::vec3 color = material.albedo_color;
+  float metallic_weight = material.metallic;
+  float ior = material.ior;
+  float spec_trans = material.spec_trans;
+  float diffuse_weight = (1 - metallic_weight) * (1 - spec_trans);
+  float diff_trans = material.diff_trans; // 0: all reflect -> 1: all transmit
+  float rough = material.roughness;
+  std::vector<std::unique_ptr<Bxdf> > bxdfs; // store a list of bxdfs
+  std::vector<float> bxdf_weights; // store sample weights
+  
+  if (diffuse_weight > 0) {
+    if (material.thin) {
+      float flat = material.flatness;
+      // TODO: Push diffuse and fakess into bxdfs
+      bxdfs.push_back(std::make_unique<DisneyDiffuse>(color));
+      bxdf_weights.push_back(diffuse_weight * (1 - flat) * (1 - diff_trans));
+      bxdfs.push_back(std::make_unique<DisneyFakess>(color, rough));
+      bxdf_weights.push_back(diffuse_weight * flat * (1 - diff_trans));
+    }
+    else {
+      LAND_ERROR("Not implemented for thick material!");
+    }
+    // Retro-reflection.
+    bxdfs.push_back(std::make_unique<DisneyRetro>(color, rough));
+    bxdf_weights.push_back(diffuse_weight);
+  }
+  // microfacet distribution
+  float aspect = 1.0f; // fix anisotrophic=0.0f
+  float alpha_x = glm::max(1e-3f, rough * rough / aspect);
+  float alpha_y = glm::max(1e-3f, rough * rough * aspect);
+  auto distrib = std::make_unique<MicrofacetDistribution>(alpha_x, alpha_y, normal);
+
+  glm::vec3 c_spec0 = linear_interpolate(metallic_weight, glm::vec3{ (ior - 1) * (ior - 1) / (ior + 1) / (ior + 1) }, color);
+  auto fresnel = std::make_unique<Fresnel>(c_spec0, metallic_weight, ior);
+  bxdfs.push_back(std::make_unique<MicrofacetReflection>(glm::vec3{ 1.0f }, std::move(distrib), std::move(fresnel)));
+  bxdf_weights.push_back(1.0f);
+
+  // transmission
+  if (spec_trans > 0.0f) {
+    // Walter et al's model, with the provided transmissive term scaled
+    // by sqrt(color), so that after two refractions, we're back to the
+    // provided color.
+    glm::vec3 T = glm::sqrt(color);
+    if (material.thin) {
+      // Scale roughness based on IOR (Burley 2015, Figure 15).
+      float rscaled = (0.65f * ior - 0.35f) * rough;
+      float alpha_x = glm::max(1e-3f, rscaled * rscaled / aspect);
+      float alpha_y = glm::max(1e-3f, rscaled * rscaled * aspect);
+      auto scaled_distrib = std::make_unique<MicrofacetDistribution>(alpha_x, alpha_y, normal);
+      bxdfs.push_back(std::make_unique<MicrofacetTransmission>(T, std::move(scaled_distrib), 1.0f, ior));
+      bxdf_weights.push_back(spec_trans);
+    }
+    else {
+      LAND_ERROR("Not implemented!");
+    }
+  }
+  if (material.thin) {
+    bxdfs.push_back(std::make_unique<LambertianTransmission>(color));
+    bxdf_weights.push_back(diff_trans);
+  }
+
+  // Sample bxdf
+  //int bxdf_idx = std::uniform_int_distribution<int>(0, bxdfs.size() - 1)(rng_);
+  int bxdf_idx = std::discrete_distribution<int>(bxdf_weights.begin(), bxdf_weights.end())(rng_);
+  Bxdf* bxdf = bxdfs[bxdf_idx].get();
+
+  // Similar to diffuse
+  if (glm::abs(glm::length(normal) - 1.0f) > 1e-3f) { // Check if normalized
+    throw "Unnormalized normal!";
+  }
+  glm::vec3 radiance_dir{ 0.0f };
+  int sample_light_idx;
+  glm::vec3 sample_light_pos;
+  // TODO: Use MIS for light sampling
+  scene_->GetLights().Sample(&sample_light_idx, &sample_light_pos, rng_);
+  const Light* sample_light = scene_->GetLights().GetLight(sample_light_idx);
+  // Test blocking to sampled light source
+  HitRecord hit_record_dir;
+  glm::vec3 ray = sample_light_pos - p; // ray to light
+  //scene_->TraceRay(p, glm::normalize(ray), 1e-3f, 1e4f, &hit_record);
+  scene_->TraceRay(p, glm::normalize(ray), time, 1e-3f, 1e4f, &hit_record_dir);
+  auto hit_normal = hit_record_dir.normal; // normal of intersection
+  if (glm::abs(glm::length(hit_normal) - 1.0f) > 1e-3f) { // Check if normalized
+    throw "Unnormalized normal!";
+  }
+  if (glm::distance(hit_record_dir.position, sample_light_pos) < 1e-3f) { // No blocking
+    float cos_hit = glm::dot(normal, glm::normalize(ray));
+    float cos_light = glm::dot(hit_normal, glm::normalize(-ray));
+    // In case cosine < 0 
+    if (cos_hit < 0.0f) {
+      cos_hit = 0.0f;
+    }
+    if (cos_light < 0.0f) {
+      cos_light = 0.0f;
+    }
+    float square_dist = glm::dot(ray, ray); // squared distance from p to light
+    radiance_dir = sample_light->emission * sample_light->emission_strength
+      * bxdf->GetBsdf(normal, dir_out, glm::normalize(-ray), is_front_face)
+      * cos_hit * cos_light / square_dist * sample_light->geometry->GetArea();
+    //if (glm::any(glm::lessThan(radiance_dir, glm::vec3{ 0.0f }))) {
+    //  LAND_ERROR("Negative color, bsdf {}, cos_hit {}, cos_light {}",
+    //    glm::to_string(bxdf->GetBsdf(normal, dir_out, glm::normalize(-ray))),
+    //    cos_hit, cos_light);
+    //}
+  }
+
+  // Indirect light
+  glm::vec3 radiance_indir{ 0.0f };
+  float sample_prob = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng_);
+  if (bounce_cnt_ < render_settings_->num_bounces
+    && sample_prob < render_settings_->prob_rr)
+  { // Bounce count did not reach limit and passed russian roulette
+    float pdf_indir;
+    //glm::vec3 ray_in_reverse = hemisphere_sample_cosine_weighted(normal, rng_, &pdf_indir); // Sampled incident ray, but pointing outward
+    glm::vec3 ray_in;
+    glm::vec3 bsdf = bxdf->SampleRayIn(normal, dir_out, &ray_in, &pdf_indir, rng_, is_front_face);
+    if (pdf_indir > 0.0f) { // Only do the following if the sampled ray is valid
+      glm::vec3 ray_in_reverse = -ray_in;
+      //glm::vec3 ray_in_reverse = hemisphere_sample(normal, rng_);
+      //pdf = 0.5 * INV_PI;
+      HitRecord hit_record_ind;
+      //float dist = scene_->TraceRay(p, ray_in_reverse, 1e-3f, 1e4f, &hit_record_ind);
+      float dist = scene_->TraceRay(p, ray_in_reverse, time, 1e-3f, 1e4f, &hit_record_ind);
+      if (dist > 0.0f) { // hit
+        const Material& hit_material = scene_->GetEntity(hit_record_ind.hit_entity_id).GetMaterial();
+        if (hit_material.material_type != MATERIAL_TYPE_EMISSION) { // not emission
+          bounce_cnt_++;
+          glm::vec3 color = Shade_(hit_record_ind, -ray_in_reverse, time);
+          radiance_indir = color * bsdf
+            * glm::abs(glm::dot(normal, ray_in_reverse)) / pdf_indir / render_settings_->prob_rr;
+        }
+        if (glm::any(glm::lessThan(radiance_indir, glm::vec3{ 0.0f }))) {
+          LAND_ERROR("Negative color {}, bsdf {}, cosine {}", glm::to_string(radiance_indir), glm::to_string(bsdf), glm::dot(normal, ray_in_reverse));
+        }
+      }
+    }
+  }
+  return radiance_dir + radiance_indir;
 }
 }  // namespace sparks

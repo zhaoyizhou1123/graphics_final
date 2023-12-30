@@ -23,4 +23,9 @@ void show_vector(std::vector<int> v) {
   }
   std::cout << std::endl;
 }
+
+float pow5(float x)
+{
+  return (x * x) * (x * x) * x;
+}
 }  // namespace sparks

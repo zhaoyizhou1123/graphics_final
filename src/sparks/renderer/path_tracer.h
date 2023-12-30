@@ -2,6 +2,8 @@
 #include "random"
 #include "sparks/assets/scene.h"
 #include "sparks/renderer/renderer_settings.h"
+#include "sparks/materials/bxdfs_all.h"
+#include "sparks/util/distribution.h"
 
 namespace sparks {
 class PathTracer {
@@ -75,7 +77,13 @@ class PathTracer {
     float ior, 
     bool is_front,
     float time);
-  [[nodiscard]] glm::vec3 ShadeBsdf_(const glm::vec3& p, const glm::vec3& dir_out);
+  [[nodiscard]] glm::vec3 ShadeBsdf_(
+    const glm::vec3& p,
+    const glm::vec3& dir_out, 
+    const glm::vec3& normal,
+    const Material& material, 
+    bool is_front_face,
+    float time);
   // Only consider emission light
   [[nodiscard]] glm::vec3 ShadeEmission_( 
     const glm::vec3& dir_out, 

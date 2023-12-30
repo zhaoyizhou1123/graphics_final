@@ -78,10 +78,49 @@ Material::Material(Scene *scene, const tinyxml2::XMLElement *material_element)
     alpha = std::stof(child_element->FindAttribute("value")->Value());
   }
 
+  child_element = material_element->FirstChildElement("metallic");
+  if (child_element) {
+    metallic = std::stof(child_element->FindAttribute("value")->Value());
+  }
+
   child_element = material_element->FirstChildElement("ior");
   if (child_element) {
-    alpha = std::stof(child_element->FindAttribute("value")->Value());
+    ior = std::stof(child_element->FindAttribute("value")->Value());
   }
+
+  child_element = material_element->FirstChildElement("roughness");
+  if (child_element) {
+    roughness = std::stof(child_element->FindAttribute("value")->Value());
+  }
+
+  child_element = material_element->FirstChildElement("spec_trans");
+  if (child_element) {
+    spec_trans = std::stof(child_element->FindAttribute("value")->Value());
+  }
+
+  child_element = material_element->FirstChildElement("thin");
+  if (child_element) {
+    if (child_element->FindAttribute("value")->Value() == "true") {
+      thin = true;
+    }
+    else if (child_element->FindAttribute("value")->Value() == "false") {
+      thin = false;
+    }
+    else {
+      LAND_ERROR("Unknown thin value {}", child_element->FindAttribute("value")->Value());
+    }
+  }
+
+  child_element = material_element->FirstChildElement("flatness");
+  if (child_element) {
+    flatness = std::stof(child_element->FindAttribute("value")->Value());
+  }
+
+  child_element = material_element->FirstChildElement("diff_trans");
+  if (child_element) {
+    diff_trans = std::stof(child_element->FindAttribute("value")->Value());
+  }
+
 
   material_type =
       material_name_map[material_element->FindAttribute("type")->Value()];
@@ -91,16 +130,16 @@ Material::Material(const glm::vec3 &albedo) : Material() {
   albedo_color = albedo;
 }
 
-float Material::GetBsdf(
-    const glm::vec3& pos,
-    const glm::vec3& ray_in,
-    const glm::vec3& ray_out) const {
-  return 0.0f;
-}
-
-void Material::SampleRayIn(const glm::vec3& pos, glm::vec3* ray_in, const glm::vec3& ray_out, float* pdf) const
-{
-}
+//float Material::GetBsdf(
+//    const glm::vec3& pos,
+//    const glm::vec3& ray_in,
+//    const glm::vec3& ray_out) const {
+//  return 0.0f;
+//}
+//
+//void Material::SampleRayIn(const glm::vec3& pos, glm::vec3* ray_in, const glm::vec3& ray_out, float* pdf) const
+//{
+//}
 
 //float Material::GetReflectRefract(const glm::vec3& dir_in, const glm::vec3& normal, bool is_front, glm::vec3& dir_reflect, glm::vec3& dir_refract)
 //{

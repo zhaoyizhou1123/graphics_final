@@ -43,18 +43,19 @@ public:
   explicit Material(const glm::vec3 &albedo);
   Material(Scene *scene, const tinyxml2::XMLElement *material_element);
 
-  // Return pdf
-  float GetBsdf(
-    const glm::vec3& pos,
-    const glm::vec3& ray_in,
-    const glm::vec3& ray_out) const;
+  //// Return bsdf given ray_in and ray_out
+  //glm::vec3 GetBsdf(
+  //  const HitRecord& hit_record,
+  //  const glm::vec3& ray_in,
+  //  const glm::vec3& ray_out,
+  //  float* pdf) const;
 
-  // Sample ray_in given ray_out and record pdf
-  void SampleRayIn(
-    const glm::vec3& pos,
-    glm::vec3* ray_in,
-    const glm::vec3& ray_out,
-    float* pdf) const;
+  //// Sample ray_in given ray_out and record pdf, return bsdf
+  //glm::vec3 SampleRayIn(
+  //  const HitRecord& hit_record,
+  //  glm::vec3* ray_in,
+  //  const glm::vec3& ray_out,
+  //  float* pdf) const;
 
   /* Compute reflection and refaction light
   * @param is_front: True if incident ray is in air, and want to enter the material

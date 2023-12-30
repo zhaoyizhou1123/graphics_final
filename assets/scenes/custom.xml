@@ -132,12 +132,11 @@
 
 		<material type="lambertian">
 			<albedo value="0.8 0.0 0.0"/>
-			<albedo value="0.8 0.8 0.8"/>
 		</material>
 	</model>
 
 	 <!--right dragon 1-->
-	<model type="obj" name="Right Dragon">
+	<!--<model type="obj" name="Right Dragon">
 		<filename value="../../meshes/dragon.obj"/>
 		<transform type="world">
 			<scale value="100 100 100"/>
@@ -145,13 +144,17 @@
 			<rotation value="180 19 -157"/>
 		</transform>
 
-		<material type="lambertian">
+		<material type="principled">
 			<albedo value="1 1 1"/>
+			<metallic value="0.0"/>
+			<roughness value="0.8"/>
+			<diff_trans value="0.0"/>
+			<flatness value="0.5"/>
 		</material>
-	</model>
+	</model>-->
 
 	 <!--left dragon 2-->
-	<model type="obj" name="Left Dragon">
+	<!--<model type="obj" name="Left Dragon">
 		<filename value="../../meshes/dragon.obj"/>
 		<transform type="world">
 			<scale value="100 100 100"/>
@@ -159,10 +162,19 @@
 			<rotation value="0 4 27"/>
 		</transform>
 
-		<material type="lambertian">
+		--><!--<material type="lambertian">
 			<albedo value="1 1 1"/>
+		</material>--><!--
+		<material type="principled">
+			<albedo value="1 1 1"/>
+			<metallic value="0.0"/>
+			<roughness value="0.0"/>
+			<diff_trans value="1.0"/>
+			<spec_trans value="0.0"/>
+			<flatness value="0.5"/>
+			<ior value="1.5"/>
 		</material>
-	</model>
+	</model>-->
 
 	 <!--sphere turbo 3-->
 	<model type="obj" name="ball">
@@ -172,13 +184,26 @@
 			<translation value="226 170 131"/>
 		</transform>
 
-		<material type="lambertian">
+		<!--<material type="lambertian">
 			<albedo value="1 1 1"/>
+		</material>-->
+		<material type="principled">
+			<albedo value="1 1 1"/>
+			<metallic value="0.0"/>
+			<roughness value="0.0"/>
+			<diff_trans value="0.0"/>
+			<flatness value="0.0"/>
+			<spec_trans value="1.0"/>
+			<ior value="1.5"/>
 		</material>
+		<!--<material type="transmissive">
+			<albedo value="1 1 1"/>
+			<ior value="1.0"/>
+		</material>-->-->
 	</model>
 
 	<!-- bunny-->
-	<model type="obj" name="bunny">
+	<!--<model type="obj" name="bunny">
 		<filename value="../../meshes/bunny_textured.obj"/>
 		<transform type="world">
 			<scale value="500 500 500"/>
@@ -192,7 +217,7 @@
 			<albedo value="1 1 1"/>
 			<albedo_texture value="../../textures/bunny.jpg"/>
 		</material>
-	</model>
+	</model>-->
 
 	 <!--Lantern--><!--
 	<model type="sphere" name="Lantern">
