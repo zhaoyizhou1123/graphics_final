@@ -526,7 +526,23 @@ void App::UpdateImGui() {
           ImGui::SliderFloat("Emission Strength", &material.emission_strength,
                              0.0f, 1e5f, "%.3f", ImGuiSliderFlags_Logarithmic);
       reset_accumulation_ |=
-          ImGui::SliderFloat("Alpha", &material.alpha, 0.0f, 1.0f, "%.3f");
+        ImGui::SliderFloat("Alpha", &material.alpha, 0.0f, 1.0f, "%.3f");
+      reset_accumulation_ |=
+        ImGui::SliderFloat("Metallic", &material.metallic, 0.0f, 1.0f, "%.3f");
+      reset_accumulation_ |=
+        ImGui::SliderFloat("IOR", &material.ior, 1.0f, 2.0f, "%.3f");
+      reset_accumulation_ |=
+        ImGui::SliderFloat("Rough", &material.roughness, 0.0f, 1.0f, "%.3f");
+      reset_accumulation_ |=
+        ImGui::SliderFloat("SpecTrans", &material.spec_trans, 0.0f, 1.0f, "%.3f");
+      reset_accumulation_ |=
+        ImGui::SliderFloat("Flat", &material.flatness, 0.0f, 1.0f, "%.3f");
+      reset_accumulation_ |=
+        ImGui::SliderFloat("DiffTrans", &material.diff_trans, 0.0f, 1.0f, "%.3f");
+
+      //if (reset_accumulation_) {
+      //  LAND_INFO("Metallic {}", scene.GetEntity(selected_entity_id_).GetMaterial().metallic);
+      //}
     }
 
 #if !defined(NDEBUG)

@@ -7,7 +7,7 @@ float Lights::GetTotalArea() const
 	return total_area_;
 }
 
-void Lights::Sample(int* light_idx, glm::vec3* pos, std::mt19937& rng) const
+float Lights::Sample(int* light_idx, glm::vec3* pos, std::mt19937& rng) const
 {
 	// Sample a light source according to area
 	int idx = std::discrete_distribution<int>(areas_.begin(), areas_.end())(rng);
@@ -19,6 +19,7 @@ void Lights::Sample(int* light_idx, glm::vec3* pos, std::mt19937& rng) const
 		throw "Nullptr geometry!";
 	}
 	*pos = light->geometry->Sample(rng);
+	return 1 / total_area_;
 }
 
 //void Lights::AddLight(const Light& light)

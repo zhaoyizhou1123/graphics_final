@@ -31,7 +31,7 @@
 
         <material type="emission">
             <emission value="1.0 1.0 1.0"/>
-            <emission_strength value="10.0"/>
+            <emission_strength value="30.0"/>
         </material>
     </model>
 
@@ -184,7 +184,7 @@
         <index value="19"/>
 
         <material type="lambertian">
-            <albedo value="0.9 0.9 0.9"/>
+			<albedo value="1 1 1"/>
         </material>
     </model>
 
@@ -247,7 +247,7 @@
 		<index value="19"/>
 
         <material type="specular">
-            <albedo value="0.8 0.8 0.8"/>
+			<albedo value="1 1 1"/>
         </material>
     </model>
 

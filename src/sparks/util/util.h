@@ -28,4 +28,9 @@ inline T clamp(T val, U low, V high) {
   else
     return val;
 }
+
+inline float power_heuristic(int nf, float fPdf, int ng, float gPdf) {
+  float f = nf * fPdf, g = ng * gPdf;
+  return (f * f) / (f * f + g * g);
+}
 }  // namespace sparks

@@ -45,8 +45,9 @@ namespace sparks {
 		/* @brief Sample a light point
 		* @param light_idx: Ptr to index of light
 		* @param pos: Ptr to The sampled light point
+		* @return pdf
 		*/
-		void Sample(int* light_idx, glm::vec3* pos, std::mt19937& rng) const;
+		float Sample(int* light_idx, glm::vec3* pos, std::mt19937& rng) const;
 		//void AddLight(const Light& light);
 		//void AddLight(Light&& light);
 		void AddLight(std::unique_ptr<Geometry> && geometry, const glm::vec3 & emission, float emission_strength);

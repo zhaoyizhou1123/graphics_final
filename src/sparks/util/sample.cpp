@@ -1,6 +1,7 @@
 #include "sample.h"
 #include "sparks/util/util.h"
 #include <random>
+#include <glm/gtx/string_cast.hpp>
 
 namespace sparks {
 glm::vec3 hemisphere_sample(const glm::vec3 &normal, std::mt19937& rng)
@@ -27,12 +28,16 @@ glm::vec3 normal2world(const glm::vec3 & normal, const glm::vec3 & p)
 	if (glm::distance(normal, glm::vec3{ 0,0,1 }) < 1e-9) { // normal is same as positive z, no need to rotate
 		return p;
 	}
+	if (glm::distance(normal, glm::vec3{ 0,0,-1 }) < 1e-9) { // normal is same as negative z, simply flip p
+		return -p;
+	}
 	glm::vec3 l = glm::normalize(glm::vec3{ normal.y, -normal.x, 0.0f });
 	glm::vec3 m = glm::normalize(glm::vec3{
 		normal.x * normal.z,
 		normal.y * normal.z,
 		-normal.x * normal.x - normal.y * normal.y });
 	glm::mat3 rotate = { m,l,normal };
+	//LAND_INFO("Rotate {}, p {}", glm::to_string(rotate), glm::to_string(p));
 	return rotate * p;
 }
 

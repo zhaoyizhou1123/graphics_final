@@ -478,7 +478,7 @@ Mesh::Mesh(const tinyxml2::XMLElement *element) {
     ComputeFaceTangents();
     MergeVertices();
   }
-  LAND_INFO("vertices size {}, indices size {}, tangents size {}", vertices_.size(), indices_.size(), face_tangents_.size());
+  //LAND_INFO("vertices size {}, indices size {}, tangents size {}", vertices_.size(), indices_.size(), face_tangents_.size());
 }
 
 void Mesh::Check()

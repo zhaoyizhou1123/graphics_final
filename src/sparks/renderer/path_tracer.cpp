@@ -93,7 +93,11 @@ glm::vec3 PathTracer::SampleRayPathTrace(glm::vec3 origin,
   //    return material->emission * material->emission_strength;
     
   // Not light source
-  return Shade_(hit_record, shade_dir, time);
+  glm::vec3 color = Shade_(hit_record, shade_dir, time);
+  color.x = clamp(color.x, 0.0f, 1.0f);
+  color.y = clamp(color.y, 0.0f, 1.0f);
+  color.z = clamp(color.z, 0.0f, 1.0f);
+  return color;
   //return glm::vec3{};
 }
 
@@ -135,6 +139,9 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
   if (material.material_type == MATERIAL_TYPE_EMISSION) { // emission
     //LAND_INFO("Material emission");
     // We may consider diffuse/specular light in principled BSDF
+    if (bounce_cnt_ >= 1) {
+      LAND_INFO("Bounce to emission! {}", bounce_cnt_);
+    }
     glm::vec3 color = ShadeEmission_(
       dir_out,
       normal,
@@ -164,6 +171,9 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
   }
   else if (material.material_type == MATERIAL_TYPE_SPECULAR) { // specular
     //LAND_INFO("Material specular");
+    //if (glm::abs(p.y - 330.0f) < 1e-3f) {
+    //  LAND_INFO("Specular bounce at tall block top! {}", glm::to_string(p));
+    //}
     return ShadeSpecular_(
       p,
       dir_out,
@@ -206,7 +216,7 @@ glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out
   // Sample light source, seed choice is unimportant
   int sample_light_idx;
   glm::vec3 sample_light_pos;
-  scene_->GetLights().Sample(&sample_light_idx, &sample_light_pos, rng_);
+  float pdf_light = scene_->GetLights().Sample(&sample_light_idx, &sample_light_pos, rng_);
   const Light* sample_light = scene_->GetLights().GetLight(sample_light_idx);
   // Test blocking to sampled light source
   HitRecord hit_record;
@@ -217,21 +227,26 @@ glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out
   if (glm::abs(glm::length(hit_normal) - 1.0f) > 1e-3f) { // Check if normalized
     throw "Unnormalized normal!";
   }
-  if (glm::distance(hit_record.position, sample_light_pos) < 1e-3f) { // No blocking
+  if (glm::distance(hit_record.position, sample_light_pos) < 1e-3f && hit_record.front_face) { // No blocking
    //  TODO: Complete direct light
-    float cos_hit = glm::dot(normal, glm::normalize(ray));
-    float cos_light = glm::dot(hit_normal, glm::normalize(-ray));
-    if (cos_hit < 0.0f) {
-      cos_hit = 0.0f;
-    }
-    if (cos_light < 0.0f) {
-      cos_light = 0.0f;
-    }
+    //float cos_hit = glm::dot(normal, glm::normalize(ray));
+    //float cos_light = glm::dot(hit_normal, glm::normalize(-ray));
+    //if (cos_hit < 0.0f) {
+    //  cos_hit = 0.0f;
+    //}
+    //if (cos_light < 0.0f) {
+    //  cos_light = 0.0f;
+    //}
+    float cos_hit = glm::abs(glm::dot(normal, glm::normalize(ray)));
+    float cos_light = glm::abs(glm::dot(hit_normal, glm::normalize(-ray)));
+    //float cos_hit = 1.0f;
+    //float cos_light = 1.0f;
     float square_dist = glm::dot(ray, ray); // squared distance from p to light
     radiance_dir = sample_light->emission * sample_light->emission_strength
       * albedo_color * sparks::INV_PI
-      * cos_hit * cos_light / square_dist * sample_light->geometry->GetArea();
+      * cos_hit * cos_light / square_dist / pdf_light;
   }
+  //LAND_INFO("Get direct light {}", glm::to_string(radiance_dir));
 
   // TODO: Complete indirect light
   glm::vec3 radiance_indir{ 0.0f };
@@ -245,16 +260,26 @@ glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out
     //pdf = 0.5 * INV_PI;
     HitRecord hit_record_ind;
     //float dist = scene_->TraceRay(p, ray_in_reverse, 1e-3f, 1e4f, &hit_record_ind);
-    float dist = scene_->TraceRay(p, ray_in_reverse, time, 1e-3f, 1e4f, &hit_record_ind);
-    if (dist > 0.0f) { // hit
-      const Material& hit_material = scene_->GetEntity(hit_record_ind.hit_entity_id).GetMaterial();
-      if (hit_material.material_type != MATERIAL_TYPE_EMISSION) { // not emission
-        bounce_cnt_++;
-        glm::vec3 color = Shade_(hit_record_ind, -ray_in_reverse, time);
-        radiance_indir = color * (albedo_color * INV_PI) 
-          * glm::dot(normal, ray_in_reverse) / pdf / render_settings_->prob_rr;
+    if (pdf > 0.0f) {
+      float dist = scene_->TraceRay(p, ray_in_reverse, time, 1e-3f, 1e4f, &hit_record_ind);
+      if (dist > 0.0f) { // hit
+        const Material& hit_material = scene_->GetEntity(hit_record_ind.hit_entity_id).GetMaterial();
+        if (hit_material.material_type != MATERIAL_TYPE_EMISSION) { // not emission
+          bounce_cnt_++;
+          //LAND_INFO("Diffuse bounce pos {}, dir {}, albedo {}", glm::to_string(p), glm::to_string(ray_in_reverse), glm::to_string(albedo_color));
+          glm::vec3 color = Shade_(hit_record_ind, -ray_in_reverse, time);
+          radiance_indir = color * (albedo_color * INV_PI)
+            * glm::abs(glm::dot(normal, ray_in_reverse)) / pdf / render_settings_->prob_rr;
+          //LAND_INFO("Get indirect light {}", glm::to_string(radiance_indir));
+        }
+      }
+      else {
+        //LAND_INFO("Diffuse bounce hit fail! pos {}, dir {}, albedo {}", glm::to_string(p), glm::to_string(ray_in_reverse), glm::to_string(albedo_color));
       }
     }
+  }
+  else {
+    //LAND_INFO("Failed RR {}", sample_prob);
   }
   // Need ambient light?
   //glm::vec3 ambient_color = albedo_color * scene_->GetEnvmapMinorColor();
@@ -265,7 +290,7 @@ glm::vec3 PathTracer::ShadeDiffuse_(const glm::vec3& p, const glm::vec3& dir_out
   //  glm::to_string(ambient_color));
   glm::vec3 total_color = radiance_dir + radiance_indir + ambient_color;
   if (glm::any(glm::lessThan(total_color, glm::vec3{ 0.0f }))) {
-    LAND_ERROR("Negative color {}", glm::to_string(total_color));
+    LAND_WARN("Negative color {}, dir {}, indir {}", glm::to_string(total_color), glm::to_string(radiance_dir), glm::to_string(radiance_indir));
   }
   return total_color;
 }
@@ -297,6 +322,11 @@ glm::vec3 PathTracer::ShadeSpecular_(const glm::vec3& p, const glm::vec3& dir_ou
   float dist = scene_->TraceRay(p, dir_in_reverse, time, 1e-3f, 1e4f, &hit_record_ind);
   if (dist > 0.0f) { // hit
     bounce_cnt_++;
+    LAND_INFO("Specular, p {}, in ray {}, out ray {}, next point {}",
+      glm::to_string(p),
+      glm::to_string(-dir_out),
+      glm::to_string(dir_in_reverse),
+      glm::to_string(hit_record_ind.position));
     return albedo_color * Shade_(hit_record_ind, -dir_in_reverse, time);
   }
   else {
@@ -412,8 +442,10 @@ glm::vec3 PathTracer::ShadeBsdf_(
 
   glm::vec3 c_spec0 = linear_interpolate(metallic_weight, glm::vec3{ (ior - 1) * (ior - 1) / (ior + 1) / (ior + 1) }, color);
   auto fresnel = std::make_unique<Fresnel>(c_spec0, metallic_weight, ior);
-  bxdfs.push_back(std::make_unique<MicrofacetReflection>(glm::vec3{ 1.0f }, std::move(distrib), std::move(fresnel)));
-  bxdf_weights.push_back(1.0f);
+  // Add weight according to spec_trans
+  float reflect_weight = glm::max(1e-3f, 1 - spec_trans);
+  bxdfs.push_back(std::make_unique<MicrofacetReflection>(glm::vec3{ 1.0f / reflect_weight }, std::move(distrib), std::move(fresnel)));
+  bxdf_weights.push_back(reflect_weight);
 
   // transmission
   if (spec_trans > 0.0f) {
@@ -448,11 +480,12 @@ glm::vec3 PathTracer::ShadeBsdf_(
   if (glm::abs(glm::length(normal) - 1.0f) > 1e-3f) { // Check if normalized
     throw "Unnormalized normal!";
   }
+  // Direct light
   glm::vec3 radiance_dir{ 0.0f };
   int sample_light_idx;
   glm::vec3 sample_light_pos;
-  // TODO: Use MIS for light sampling
-  scene_->GetLights().Sample(&sample_light_idx, &sample_light_pos, rng_);
+  // IS method 1: Sampling the light
+  float pdf_light = scene_->GetLights().Sample(&sample_light_idx, &sample_light_pos, rng_);
   const Light* sample_light = scene_->GetLights().GetLight(sample_light_idx);
   // Test blocking to sampled light source
   HitRecord hit_record_dir;
@@ -473,17 +506,46 @@ glm::vec3 PathTracer::ShadeBsdf_(
     if (cos_light < 0.0f) {
       cos_light = 0.0f;
     }
+    // Compute MIS weight
+    float pdf_bsdf = bxdf->GetPdf(normal, dir_out, glm::normalize(-ray), is_front_face);
+    float weight = power_heuristic(1, pdf_light, 1, pdf_bsdf);
     float square_dist = glm::dot(ray, ray); // squared distance from p to light
-    radiance_dir = sample_light->emission * sample_light->emission_strength
+    radiance_dir += sample_light->emission * sample_light->emission_strength
       * bxdf->GetBsdf(normal, dir_out, glm::normalize(-ray), is_front_face)
-      * cos_hit * cos_light / square_dist * sample_light->geometry->GetArea();
+      * cos_hit * cos_light / square_dist / pdf_light * weight;
     //if (glm::any(glm::lessThan(radiance_dir, glm::vec3{ 0.0f }))) {
     //  LAND_ERROR("Negative color, bsdf {}, cos_hit {}, cos_light {}",
     //    glm::to_string(bxdf->GetBsdf(normal, dir_out, glm::normalize(-ray))),
     //    cos_hit, cos_light);
     //}
   }
-
+  // IS method 2: Sampling the bsdf
+  float pdf_dir_bsdf;
+  //glm::vec3 ray_in_reverse = hemisphere_sample_cosine_weighted(normal, rng_, &pdf_indir); // Sampled incident ray, but pointing outward
+  glm::vec3 ray_in;
+  glm::vec3 bsdf = bxdf->SampleRayIn(normal, dir_out, &ray_in, &pdf_dir_bsdf, rng_, is_front_face);
+  if (pdf_dir_bsdf > 0.0f) { // Only do the following if the sampled ray is valid
+    glm::vec3 ray_in_reverse = -ray_in;
+    //glm::vec3 ray_in_reverse = hemisphere_sample(normal, rng_);
+    //pdf = 0.5 * INV_PI;
+    HitRecord hit_record_dir_bsdf;
+    //float dist = scene_->TraceRay(p, ray_in_reverse, 1e-3f, 1e4f, &hit_record_ind);
+    float dist = scene_->TraceRay(p, ray_in_reverse, time, 1e-3f, 1e4f, &hit_record_dir_bsdf);
+    if (dist > 0.0f) { // hit
+      const Material& hit_material = scene_->GetEntity(hit_record_dir_bsdf.hit_entity_id).GetMaterial();
+      if (hit_material.material_type == MATERIAL_TYPE_EMISSION) { // is a light source
+        glm::vec3 color = Shade_(hit_record_dir_bsdf, -ray_in_reverse, time);
+        // Compute MIS weight
+        float pdf_light = 1.0f / scene_->GetLights().GetTotalArea();
+        float weight = power_heuristic(1, pdf_dir_bsdf, 1, pdf_light);
+        radiance_dir += color * bsdf
+          * glm::abs(glm::dot(normal, ray_in_reverse)) / pdf_dir_bsdf * weight;
+      }
+      //if (glm::any(glm::lessThan(radiance_indir, glm::vec3{ 0.0f }))) {
+      //  LAND_ERROR("Negative color {}, bsdf {}, cosine {}", glm::to_string(radiance_indir), glm::to_string(bsdf), glm::dot(normal, ray_in_reverse));
+      //}
+    }
+  }
   // Indirect light
   glm::vec3 radiance_indir{ 0.0f };
   float sample_prob = std::uniform_real_distribution<float>(0.0f, 1.0f)(rng_);

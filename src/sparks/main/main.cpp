@@ -27,7 +27,7 @@ ABSL_FLAG(uint32_t, height, 1080, "Window height");
 ABSL_FLAG(bool, vkrt, false, "Use Vulkan Ray Tracing pipeline");
 ABSL_FLAG(int, device, -1, "Select physical device manually");
 
-ABSL_FLAG(bool, test, false, "True if testing");
+ABSL_FLAG(bool, test, true, "True if testing");
 
 void RunApp(sparks::Renderer *renderer);
 
@@ -119,24 +119,38 @@ void test_main() {
 
   //LAND_INFO("Bvh has stored {} faces", cnt);
   // 
-  sparks::Scene scene("../../scenes/cornell_specular_trans.xml");
+  //sparks::Scene scene("../../scenes/cornell_v2.xml");
 
-  glm::vec3 origin{ 200.0f, 208.0f, -10.0f };
-  glm::vec3 direction = glm::normalize(glm::vec3{ 0.1f, 0.1f, 1.0f });
-  sparks::HitRecord hit_record;
-  float t = scene.TraceRay(origin, direction, 1e-3, 1e4, &hit_record);
-  LAND_INFO("t: {}", t);
-  //sparks::RendererSettings renderer_setting;
-  //sparks::PathTracer path_tracer(&renderer_setting, &scene);
-  //std::string seed;
-  //while (true) {
-  //  std::cout << "Input a seed, enter 's' to stop: ";
-  //  std::cin >> seed;
-  //  if (seed == "s") {
-  //    break;
-  //  }
-  //  path_tracer.SetSeed(std::stoi(seed));
-  //  glm::vec3 color = path_tracer.SampleRayPathTrace(origin, direction);
-  //  LAND_INFO("Seed {}, origin {}, direction {}, color {}", seed, glm::to_string(origin), glm::to_string(direction), glm::to_string(color));
+  //glm::vec3 origin{ 278.0f, 273.0f, -800.0f };
+  //glm::vec3 dest{ 350.0f, 548.8f, 350.0f };
+  ///*glm::vec3 direction{-0.125803f, 0.132744f, 0.983134f};*/
+  //glm::vec3 direction = glm::normalize(dest - origin);
+  ////glm::vec3 origin{ 350.0f, 548.8f, 350.0f };
+  ////glm::vec3 direction= glm::normalize(glm::vec3{ -0.1f, -1.0f, -0.1f });
+  //sparks::RendererSettings renderer_settings;
+  //sparks::PathTracer path_tracer(&renderer_settings, &scene);
+  //for (int i = 0; i < 10; i++) {
+  //  path_tracer.SetSeed(i);
+  //  auto& color = path_tracer.SampleRayPathTrace(origin, direction, 0.0f);
+  //  //LAND_INFO("Color {}", glm::to_string(color));
+  //  std::cout << "------------------" <<std::endl;
   //}
+
+  std::mt19937 rng(std::random_device{}());
+  for (int i = 0; i < 10; i++) {
+    auto& a = sparks::hemisphere_sample(glm::vec3{ 0,-1,0 }, rng);
+    float pdf;
+    auto& b = sparks::hemisphere_sample_cosine_weighted(glm::vec3{ 0,-1,0 }, rng, &pdf);
+    LAND_INFO("{}, sample {}, weighted sample {}", i, glm::to_string(a), glm::to_string(b));
+  }
+
+  //glm::vec3 displace{ 0.0f }; // displacement
+  //glm::mat4 translation = glm::translate(glm::mat4{ 1.0f }, displace);
+  //glm::mat4 transform{ 1.0f };
+  //glm::mat4 total = translation * transform;
+  //LAND_INFO("Translation {}, transformation {}, total {}", glm::to_string(translation), glm::to_string(transform), glm::to_string(total));
+  //glm::mat4 inv_transform = glm::inverse(transform);
+  //glm::mat4 inv_total = glm::inverse(total);
+  //LAND_INFO("Inv transformation {}, inv total {}", glm::to_string(inv_transform), glm::to_string(inv_total));
+
 }

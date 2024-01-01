@@ -2,24 +2,26 @@
 <scene>
 	<camera>
 		<transform type="lookat">
-			<eye value="278 273 -800"/>
-			<center value="278 273 0"/>
+			<eye value="397 273 -800"/>
+			<center value="397 273 0"/>
 			<up value="0.0 1.0 0.0"/>
 		</transform>
 		<fov value="40"/>
 		<shutter value="10"/>
+		<focal_length value="1000"/>
+		<aperture value="10.0"/>
 	</camera>
 
 	<!--Light 0-->
 	<model name="Light">
-		<!--<vertex position="546.0 548.7 10.0"/>
-		<vertex position="546.0 548.7 589.0"/>
-		<vertex position="10.0 548.7 589.0"/>
-		<vertex position="10.0 548.7 10.0"/>-->
-		<vertex position="343.0 548.7 227.0"/>
+		<vertex position="800.0 1000.0 -500.0"/>
+		<vertex position="800.0 1000.0 560.0"/>
+		<vertex position="0.0 1000.0 560.0"/>
+		<vertex position="0.0 1000.0 -500.0"/>
+		<!--<vertex position="343.0 548.7 227.0"/>
 		<vertex position="343.0 548.7 332.0"/>
 		<vertex position="213.0 548.7 332.0"/>
-		<vertex position="213.0 548.7 227.0"/>
+		<vertex position="213.0 548.7 227.0"/>-->
 		<index value="0"/>
 		<index value="1"/>
 		<index value="3"/>
@@ -28,26 +30,26 @@
 		<index value="3"/>
 
 		<geometry type="plane">
-			<!--<x min="10.0" max="546.0"/>
+			<x min="0.0" max="800.0"/>
+			<y min="1000.0" max="1000.0"/>
+			<z min="-500.0" max="560.0"/>
+			<!--<x min="213.0" max="343.0"/>
 			<y min="548.7" max="548.7"/>
-			<z min="10.0" max="589.0"/>-->
-			<x min="213.0" max="343.0"/>
-			<y min="548.7" max="548.7"/>
-			<z min="227.0" max="332.0"/>
+			<z min="227.0" max="332.0"/>-->
 		</geometry>
 
 		<material type="emission">
 			<emission value="1.0 1.0 1.0"/>
-			<emission_strength value="30.0"/>
+			<emission_strength value="5.0"/>
 		</material>
 	</model>
 
 	<!--floor 1-->
 	<model name="Floor">
-		<vertex position="557.0 0.1   0.0"/>
-		<vertex position="0.0 0.1   0.0"/>
-		<vertex position="0.0 0.1 560.0"/>
-		<vertex position="557.0 0.1 560.0"/>
+		<vertex position="795.0 0.1   0.0" tex_coord="1.0 0.0"/>
+		<vertex position="0.0 0.1   0.0" tex_coord="0.0 0.0"/>
+		<vertex position="0.0 0.1 560.0" tex_coord="0.0 1.0"/>
+		<vertex position="795.0 0.1 560.0" tex_coord="1.0 1.0"/>
 		<index value="0"/>
 		<index value="1"/>
 		<index value="3"/>
@@ -55,13 +57,24 @@
 		<index value="2"/>
 		<index value="3"/>
 
-		<material type="lambertian">
+		<!--<material type="lambertian">
 			<albedo value="0.8 0.8 0.8"/>
+			<albedo_texture value="../../textures/floor_color.jpg"/>
+			<normal_texture value="../../textures/floor_normal.jpg"/>
+		</material>-->
+		<material type="principled">
+			<albedo value="0.8 0.8 0.8"/>
+			<metallic value="1.0"/>
+			<roughness value="0.1"/>
+			<diff_trans value="0.0"/>
+			<spec_trans value="0.0"/>
+			<flatness value="0.0"/>
+			<ior value="1.0"/>
 		</material>
 	</model>
 
 	<!--ceiling 2-->
-	<model name="Ceiling">
+	<!--<model name="Ceiling">
 		<vertex position="557.0 548.8 0.0  "/>
 		<vertex position="557.0 548.8 560.0"/>
 		<vertex position="0.0 548.8 560.0"/>
@@ -76,23 +89,31 @@
 		<material type="lambertian">
 			<albedo value="0.8 0.8 0.8"/>
 		</material>
-	</model>
+	</model>-->
 
 	<!--back wall 3-->
 	<model name="Back Wall">
-		<vertex position="557.0   0.0 559.8" tex_coord="1.0 0.0"/>
+		<vertex position="795.0 0.0 559.8" tex_coord="1.0 0.0"/>
 		<vertex position="0.0   0.0 559.8" tex_coord="0.0 0.0"/>
-		<vertex position="0.0 550.0 559.8" tex_coord="0.0 1.0"/>
-		<vertex position="557.0 550.0 559.8" tex_coord="1.0 1.0"/>
+		<vertex position="0.0   500.0 559.8" tex_coord="0.0 1.0"/>
+		<vertex position="795.0 500.0 559.8" tex_coord="1.0 1.0"/>
+		<vertex position="795.0 1000.0 559.8" tex_coord="1.0 0.0"/>
+		<vertex position="0.0 1000.0 559.8" tex_coord="0.0 0.0"/>
 		<index value="0"/>
 		<index value="1"/>
 		<index value="3"/>
 		<index value="1"/>
 		<index value="2"/>
 		<index value="3"/>
+		<index value="2"/>
+		<index value="4"/>
+		<index value="3"/>
+		<index value="2"/>
+		<index value="5"/>
+		<index value="4"/>
 
 		<material type="lambertian">
-			<albedo value="0.8 0.8 0.8"/>
+			<albedo value="1.0 1.0 1.0"/>
 			<albedo_texture value="../../textures/brick_color.jpg"/>
 			<normal_texture value="../../textures/brick_normal.jpg"/>
 		</material>
@@ -100,101 +121,146 @@
 
 	<!--right wall 4-->
 	<model name="Right Wall">
-		<vertex position="0.1   0.0 560.0 "/>
-		<vertex position="0.1   0.0   0.0"/>
-		<vertex position="0.1 550.0   0.0"/>
-		<vertex position="0.1 550.0 560.0"/>
+		<vertex position="0.1   0.0 560.0" tex_coord="1.0 0.0"/>
+		<vertex position="0.1   0.0   0.0" tex_coord="0.0 0.0"/>
+		<vertex position="0.1 500.0   0.0" tex_coord="0.0 1.0"/>
+		<vertex position="0.1 500.0 560.0" tex_coord="1.0 1.0"/>
+		<vertex position="0.1 1000.0 560.0" tex_coord="1.0 0.0"/>
+		<vertex position="0.1 1000.0   0.0" tex_coord="0.0 0.0"/>
 		<index value="0"/>
 		<index value="1"/>
 		<index value="3"/>
 		<index value="1"/>
 		<index value="2"/>
 		<index value="3"/>
+		<index value="2"/>
+		<index value="4"/>
+		<index value="3"/>
+		<index value="2"/>
+		<index value="5"/>
+		<index value="4"/>
+		
+		<!--<vertex position="0.1   0.0 560.0 "/>
+		<vertex position="0.1   0.0   0.0"/>
+		<vertex position="0.1 1000.0   0.0"/>
+		<vertex position="0.1 1000.0 560.0"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>-->
 
-		<material type="lambertian">
+		<!--<material type="lambertian">
 			<albedo value="0.0 0.8 0.0"/>
 			<albedo value="0.8 0.8 0.8"/>
+		</material>-->
+		<material type="lambertian">
+			<albedo value="1.0 1.0 1.0"/>
+			<albedo_texture value="../../textures/brick_color.jpg"/>
+			<normal_texture value="../../textures/brick_normal.jpg"/>
 		</material>
 	</model>
 
 	<!--left wall 5-->
 	<model name="Left Wall">
-		<vertex position="556.8   0.0   0.0 "/>
-		<vertex position="556.8   0.0 560.0"/>
-		<vertex position="556.8 550.0 560.0"/>
-		<vertex position="556.8 550.0   0.0"/>
+		<vertex position="795   0.0   0.0" tex_coord="1.0 0.0"/>
+		<vertex position="795   0.0 560.0" tex_coord="0.0 0.0"/>
+		<vertex position="795 500.0 560.0" tex_coord="0.0 1.0"/>
+		<vertex position="795 500.0   0.0" tex_coord="1.0 1.0"/>
+		<vertex position="795 1000.0   0.0" tex_coord="1.0 0.0"/>
+		<vertex position="795 1000.0 560.0" tex_coord="0.0 0.0"/>
 		<index value="0"/>
 		<index value="1"/>
 		<index value="3"/>
 		<index value="1"/>
 		<index value="2"/>
 		<index value="3"/>
+		<index value="2"/>
+		<index value="4"/>
+		<index value="3"/>
+		<index value="2"/>
+		<index value="5"/>
+		<index value="4"/>
+		
+		<!--<vertex position="556.8   0.0   0.0 "/>
+		<vertex position="556.8   0.0 560.0"/>
+		<vertex position="556.8 1000.0 560.0"/>
+		<vertex position="556.8 1000.0   0.0"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>-->
 
 		<material type="lambertian">
-			<albedo value="0.8 0.0 0.0"/>
+			<albedo value="1.0 1.0 1.0"/>
+			<albedo_texture value="../../textures/brick_color.jpg"/>
+			<normal_texture value="../../textures/brick_normal.jpg"/>
 		</material>
 	</model>
 
 	 <!--right dragon 1-->
-	<!--<model type="obj" name="Right Dragon">
+	<model type="obj" name="Right Dragon">
 		<filename value="../../meshes/dragon.obj"/>
 		<transform type="world">
-			<scale value="100 100 100"/>
-			<translation value="102 71 174"/>
+			<scale value="150 150 150"/>
+			<translation value="190 123 174"/>
 			<rotation value="180 19 -157"/>
 		</transform>
 
 		<material type="principled">
-			<albedo value="1 1 1"/>
-			<metallic value="0.0"/>
-			<roughness value="0.8"/>
+			<albedo value="1 0.84 0"/>
+			<metallic value="1.0"/>
+			<roughness value="0.4"/>
 			<diff_trans value="0.0"/>
-			<flatness value="0.5"/>
+			<flatness value="0.0"/>
 		</material>
-	</model>-->
+	</model>
 
 	 <!--left dragon 2-->
-	<!--<model type="obj" name="Left Dragon">
+	<model type="obj" name="Left Dragon">
 		<filename value="../../meshes/dragon.obj"/>
 		<transform type="world">
-			<scale value="100 100 100"/>
-			<translation value="360 180 440"/>
+			<scale value="150 150 150"/>
+			<translation value="630 497 500"/>
 			<rotation value="0 4 27"/>
-		</transform>
-
-		--><!--<material type="lambertian">
-			<albedo value="1 1 1"/>
-		</material>--><!--
-		<material type="principled">
-			<albedo value="1 1 1"/>
-			<metallic value="0.0"/>
-			<roughness value="0.0"/>
-			<diff_trans value="1.0"/>
-			<spec_trans value="0.0"/>
-			<flatness value="0.5"/>
-			<ior value="1.5"/>
-		</material>
-	</model>-->
-
-	 <!--sphere turbo 3-->
-	<model type="obj" name="ball">
-		<filename value="../../meshes/sphere.obj"/>
-		<transform type="world">
-			<scale value="25 25 25"/>
-			<translation value="226 170 131"/>
 		</transform>
 
 		<!--<material type="lambertian">
 			<albedo value="1 1 1"/>
 		</material>-->
 		<material type="principled">
+			<albedo value="0.24 0.88 0.68"/>
+			<metallic value="0.0"/>
+			<roughness value="0.0"/>
+			<diff_trans value="0.1"/>
+			<spec_trans value="0.9"/>
+			<flatness value="0.0"/>
+			<ior value="1.65"/>
+		</material>
+	</model>
+
+	 <!--sphere turbo 3-->
+	<model type="obj" name="ball">
+		<filename value="../../meshes/sphere.obj"/>
+		<transform type="world">
+			<scale value="40 40 40"/>
+			<translation value="373 312 131"/>
+		</transform>
+
+		<!--<material type="lambertian">
 			<albedo value="1 1 1"/>
+		</material>-->
+		<material type="principled">
+			<albedo value="0.9 0.9 0.9"/>
 			<metallic value="0.0"/>
 			<roughness value="0.0"/>
 			<diff_trans value="0.0"/>
-			<flatness value="0.0"/>
+			<flatness value="1.0"/>
 			<spec_trans value="1.0"/>
-			<ior value="1.5"/>
+			<ior value="1.6"/>
 		</material>
 		<!--<material type="transmissive">
 			<albedo value="1 1 1"/>
@@ -203,11 +269,11 @@
 	</model>
 
 	<!-- bunny-->
-	<!--<model type="obj" name="bunny">
+	<model type="obj" name="bunny">
 		<filename value="../../meshes/bunny_textured.obj"/>
 		<transform type="world">
 			<scale value="500 500 500"/>
-			<translation value="400 -16 100"/>
+			<translation value="648 -21 100"/>
 			<rotation value="-179 14 -176"/>
 		</transform>
 
@@ -217,7 +283,7 @@
 			<albedo value="1 1 1"/>
 			<albedo_texture value="../../textures/bunny.jpg"/>
 		</material>
-	</model>-->
+	</model>
 
 	 <!--Lantern--><!--
 	<model type="sphere" name="Lantern">

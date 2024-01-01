@@ -20,8 +20,8 @@
         <index value="1"/>
         <index value="3"/>
         <index value="1"/>
-        <index value="3"/>
         <index value="2"/>
+        <index value="3"/>
 
 		<geometry type="plane">
 			<x min="213.0" max="343.0"/>
@@ -31,7 +31,7 @@
 
         <material type="emission">
             <emission value="1.0 1.0 1.0"/>
-            <emission_strength value="10.0"/>
+            <emission_strength value="30.0"/>
         </material>
     </model>
 
@@ -41,12 +41,12 @@
         <vertex position="0.0 0.0   0.0"/>
         <vertex position="0.0 0.0 559.2"/>
         <vertex position="549.6 0.0 559.2"/>
-        <index value="0"/>
-        <index value="1"/>
-        <index value="3"/>
-        <index value="1"/>
-        <index value="3"/>
-        <index value="2"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
 
         <material type="lambertian">
             <albedo value="0.8 0.8 0.8"/>
@@ -59,12 +59,12 @@
         <vertex position="556.0 548.8 559.2"/>
         <vertex position="0.0 548.8 559.2"/>
         <vertex position="0.0 548.8   0.0"/>
-        <index value="0"/>
-        <index value="1"/>
-        <index value="3"/>
-        <index value="1"/>
-        <index value="3"/>
-        <index value="2"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
 
         <material type="lambertian">
             <albedo value="0.8 0.8 0.8"/>
@@ -77,12 +77,12 @@
         <vertex position="0.0   0.0 559.2"/>
         <vertex position="0.0 548.8 559.2"/>
         <vertex position="556.0 548.8 559.2"/>
-        <index value="0"/>
-        <index value="1"/>
-        <index value="3"/>
-        <index value="1"/>
-        <index value="3"/>
-        <index value="2"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
 
         <material type="lambertian">
             <albedo value="0.8 0.8 0.8"/>
@@ -95,12 +95,12 @@
         <vertex position="0.0   0.0   0.0"/>
         <vertex position="0.0 548.8   0.0"/>
         <vertex position="0.0 548.8 559.2"/>
-        <index value="0"/>
-        <index value="1"/>
-        <index value="3"/>
-        <index value="1"/>
-        <index value="3"/>
-        <index value="2"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
 
         <material type="lambertian">
             <albedo value="0.0 0.8 0.0"/>
@@ -113,12 +113,12 @@
         <vertex position="549.6   0.0 559.2"/>
         <vertex position="556.0 548.8 559.2"/>
         <vertex position="556.0 548.8   0.0"/>
-        <index value="0"/>
-        <index value="1"/>
-        <index value="3"/>
-        <index value="1"/>
-        <index value="3"/>
-        <index value="2"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
 
         <material type="lambertian">
             <albedo value="0.8 0.0 0.0"/>
@@ -152,39 +152,39 @@
         <vertex position=" 82.0 165.0 225.0"/>
         <vertex position="82.0   0.0 225.0"/>
 
-        <index value="0"/>
-        <index value="1"/>
-        <index value="3"/>
-        <index value="1"/>
-        <index value="2"/>
-        <index value="3"/>
-        <index value="4"/>
-        <index value="5"/>
-        <index value="7"/>
-        <index value="5"/>
-        <index value="6"/>
-        <index value="7"/>
-        <index value="8"/>
-        <index value="9"/>
-        <index value="11"/>
-        <index value="9"/>
-        <index value="10"/>
-        <index value="11"/>
-        <index value="12"/>
-        <index value="13"/>
-        <index value="15"/>
-        <index value="13"/>
-        <index value="14"/>
-        <index value="15"/>
-        <index value="16"/>
-        <index value="17"/>
-        <index value="19"/>
-        <index value="17"/>
-        <index value="18"/>
-        <index value="19"/>
+		<index value="0"/>
+		<index value="1"/>
+		<index value="3"/>
+		<index value="1"/>
+		<index value="2"/>
+		<index value="3"/>
+		<index value="4"/>
+		<index value="5"/>
+		<index value="7"/>
+		<index value="5"/>
+		<index value="6"/>
+		<index value="7"/>
+		<index value="8"/>
+		<index value="9"/>
+		<index value="11"/>
+		<index value="9"/>
+		<index value="10"/>
+		<index value="11"/>
+		<index value="12"/>
+		<index value="13"/>
+		<index value="15"/>
+		<index value="13"/>
+		<index value="14"/>
+		<index value="15"/>
+		<index value="16"/>
+		<index value="17"/>
+		<index value="19"/>
+		<index value="17"/>
+		<index value="18"/>
+		<index value="19"/>
 
         <material type="lambertian">
-            <albedo value="0.9 0.9 0.9"/>
+            <albedo value="1 1 1"/>
         </material>
     </model>
 
@@ -246,8 +246,8 @@
 		<index value="18"/>
 		<index value="19"/>
 
-        <material type="specular">
-            <albedo value="0.8 0.8 0.8"/>
+        <material type="lambertian">
+            <albedo value="1 1 1"/>
         </material>
     </model>
 
