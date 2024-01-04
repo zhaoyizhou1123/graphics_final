@@ -27,7 +27,7 @@ ABSL_FLAG(uint32_t, height, 1080, "Window height");
 ABSL_FLAG(bool, vkrt, false, "Use Vulkan Ray Tracing pipeline");
 ABSL_FLAG(int, device, -1, "Select physical device manually");
 
-ABSL_FLAG(bool, test, true, "True if testing");
+ABSL_FLAG(bool, test, false, "True if testing");
 
 void RunApp(sparks::Renderer *renderer);
 

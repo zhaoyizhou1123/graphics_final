@@ -94,9 +94,9 @@ glm::vec3 PathTracer::SampleRayPathTrace(glm::vec3 origin,
     
   // Not light source
   glm::vec3 color = Shade_(hit_record, shade_dir, time);
-  color.x = clamp(color.x, 0.0f, 1.0f);
-  color.y = clamp(color.y, 0.0f, 1.0f);
-  color.z = clamp(color.z, 0.0f, 1.0f);
+  color.x = clamp(color.x, 0.0f, render_settings_->max_color);
+  color.y = clamp(color.y, 0.0f, render_settings_->max_color);
+  color.z = clamp(color.z, 0.0f, render_settings_->max_color);
   return color;
   //return glm::vec3{};
 }
@@ -139,9 +139,9 @@ glm::vec3 PathTracer::Shade_(const HitRecord& hit_record, const glm::vec3& dir_o
   if (material.material_type == MATERIAL_TYPE_EMISSION) { // emission
     //LAND_INFO("Material emission");
     // We may consider diffuse/specular light in principled BSDF
-    if (bounce_cnt_ >= 1) {
-      LAND_INFO("Bounce to emission! {}", bounce_cnt_);
-    }
+    //if (bounce_cnt_ >= 1) {
+    //  LAND_INFO("Bounce to emission! {}", bounce_cnt_);
+    //}
     glm::vec3 color = ShadeEmission_(
       dir_out,
       normal,
@@ -322,11 +322,11 @@ glm::vec3 PathTracer::ShadeSpecular_(const glm::vec3& p, const glm::vec3& dir_ou
   float dist = scene_->TraceRay(p, dir_in_reverse, time, 1e-3f, 1e4f, &hit_record_ind);
   if (dist > 0.0f) { // hit
     bounce_cnt_++;
-    LAND_INFO("Specular, p {}, in ray {}, out ray {}, next point {}",
-      glm::to_string(p),
-      glm::to_string(-dir_out),
-      glm::to_string(dir_in_reverse),
-      glm::to_string(hit_record_ind.position));
+    //LAND_INFO("Specular, p {}, in ray {}, out ray {}, next point {}",
+    //  glm::to_string(p),
+    //  glm::to_string(-dir_out),
+    //  glm::to_string(dir_in_reverse),
+    //  glm::to_string(hit_record_ind.position));
     return albedo_color * Shade_(hit_record_ind, -dir_in_reverse, time);
   }
   else {
